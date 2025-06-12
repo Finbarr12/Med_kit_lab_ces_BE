@@ -52,9 +52,8 @@ const ProductSchema: Schema = new Schema(
       required: true,
     },
     createdBy: {
-      type: Schema.Types.ObjectId,
-      ref: "User",
-      required: true,
+      type: String,
+      default: "admin",
     },
   },
   {

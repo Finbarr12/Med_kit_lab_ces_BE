@@ -1,6 +1,11 @@
 import mongoose, { Schema } from "mongoose"
 import bcrypt from "bcryptjs"
-import type { IUser } from "../types"
+
+export interface IUser extends Document {
+  email: string
+  password: string
+  comparePassword(candidatePassword: string): Promise<boolean>
+}
 
 const UserSchema: Schema = new Schema(
   {
@@ -15,11 +20,6 @@ const UserSchema: Schema = new Schema(
       type: String,
       required: true,
       minlength: 6,
-    },
-    role: {
-      type: String,
-      enum: ["admin"],
-      default: "admin",
     },
   },
   {

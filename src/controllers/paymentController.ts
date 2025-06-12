@@ -1,15 +1,9 @@
 import type { Request, Response } from "express"
-import { validationResult } from "express-validator"
 import Payment from "../models/Payment"
 import Order from "../models/Order"
 
 export const createPaymentRequest = async (req: Request, res: Response) => {
   try {
-    const errors = validationResult(req)
-    if (!errors.isEmpty()) {
-      return res.status(400).json({ errors: errors.array() })
-    }
-
     const { orderId, customerInfo } = req.body
     const paymentProof = req.file?.path // Cloudinary secure_url
 
@@ -61,7 +55,6 @@ export const getAllPaymentRequests = async (req: Request, res: Response) => {
 
     const payments = await Payment.find(query)
       .populate("orderId", "orderNumber totalAmount status")
-      .populate("approvedBy", "email")
       .sort({ createdAt: -1 })
       .limit(limit * 1)
       .skip((page - 1) * limit)
@@ -81,9 +74,7 @@ export const getAllPaymentRequests = async (req: Request, res: Response) => {
 
 export const getPaymentById = async (req: Request, res: Response) => {
   try {
-    const payment = await Payment.findById(req.params.id)
-      .populate("orderId", "orderNumber totalAmount status items")
-      .populate("approvedBy", "email")
+    const payment = await Payment.findById(req.params.id).populate("orderId", "orderNumber totalAmount status items")
 
     if (!payment) {
       return res.status(404).json({ message: "Payment not found" })
@@ -97,13 +88,10 @@ export const getPaymentById = async (req: Request, res: Response) => {
 
 export const approvePayment = async (req: Request, res: Response) => {
   try {
-    const { adminId } = req.params
-
     const payment = await Payment.findByIdAndUpdate(
       req.params.id,
       {
         status: "approved",
-        approvedBy: adminId,
         approvedAt: new Date(),
       },
       { new: true },
@@ -127,7 +115,6 @@ export const approvePayment = async (req: Request, res: Response) => {
 
 export const rejectPayment = async (req: Request, res: Response) => {
   try {
-    const { adminId } = req.params
     const { rejectionReason } = req.body
 
     const payment = await Payment.findByIdAndUpdate(
@@ -135,7 +122,6 @@ export const rejectPayment = async (req: Request, res: Response) => {
       {
         status: "rejected",
         rejectionReason,
-        approvedBy: adminId,
         approvedAt: new Date(),
       },
       { new: true },
