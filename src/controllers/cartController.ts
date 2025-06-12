@@ -2,18 +2,17 @@ import type { Request, Response } from "express"
 import { validationResult } from "express-validator"
 import Cart from "../models/Cart"
 import Product from "../models/Product"
-import Customer from "../models/Customer"
 
 export const getCart = async (req: Request, res: Response) => {
   try {
-    const { customerId } = req.params
+    const { sessionId } = req.params
 
-    const cart = await Cart.findOne({ customerId }).populate("items.product", "productName category productImage")
+    const cart = await Cart.findOne({ sessionId }).populate("items.product", "productName category productImage")
 
     if (!cart) {
       return res.json({
         cart: {
-          customerId,
+          sessionId,
           items: [],
           totalAmount: 0,
         },
@@ -33,14 +32,8 @@ export const addToCart = async (req: Request, res: Response) => {
       return res.status(400).json({ errors: errors.array() })
     }
 
-    const { customerId } = req.params
+    const { sessionId } = req.params
     const { productId, brandName, quantity } = req.body
-
-    // Verify customer exists
-    const customer = await Customer.findById(customerId)
-    if (!customer) {
-      return res.status(404).json({ message: "Customer not found" })
-    }
 
     // Verify product and brand
     const product = await Product.findById(productId)
@@ -60,9 +53,9 @@ export const addToCart = async (req: Request, res: Response) => {
     }
 
     // Find or create cart
-    let cart = await Cart.findOne({ customerId })
+    let cart = await Cart.findOne({ sessionId })
     if (!cart) {
-      cart = new Cart({ customerId, items: [] })
+      cart = new Cart({ sessionId, items: [] })
     }
 
     // Check if item already exists in cart
@@ -108,10 +101,10 @@ export const updateCartItem = async (req: Request, res: Response) => {
       return res.status(400).json({ errors: errors.array() })
     }
 
-    const { customerId } = req.params
+    const { sessionId } = req.params
     const { productId, brandName, quantity } = req.body
 
-    const cart = await Cart.findOne({ customerId })
+    const cart = await Cart.findOne({ sessionId })
     if (!cart) {
       return res.status(404).json({ message: "Cart not found" })
     }
@@ -156,10 +149,10 @@ export const updateCartItem = async (req: Request, res: Response) => {
 
 export const removeFromCart = async (req: Request, res: Response) => {
   try {
-    const { customerId } = req.params
+    const { sessionId } = req.params
     const { productId, brandName } = req.body
 
-    const cart = await Cart.findOne({ customerId })
+    const cart = await Cart.findOne({ sessionId })
     if (!cart) {
       return res.status(404).json({ message: "Cart not found" })
     }
@@ -180,9 +173,9 @@ export const removeFromCart = async (req: Request, res: Response) => {
 
 export const clearCart = async (req: Request, res: Response) => {
   try {
-    const { customerId } = req.params
+    const { sessionId } = req.params
 
-    const cart = await Cart.findOne({ customerId })
+    const cart = await Cart.findOne({ sessionId })
     if (!cart) {
       return res.status(404).json({ message: "Cart not found" })
     }

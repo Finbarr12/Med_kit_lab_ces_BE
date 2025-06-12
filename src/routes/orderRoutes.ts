@@ -12,6 +12,7 @@ const router = Router()
 
 // Validation rules
 const orderValidation = [
+  body("customerId").optional().isMongoId().withMessage("Invalid customer ID"),
   body("customerInfo.fullName").notEmpty().trim().withMessage("Full name is required"),
   body("customerInfo.email").isEmail().normalizeEmail().withMessage("Valid email is required"),
   body("customerInfo.phone").notEmpty().trim().withMessage("Phone is required"),

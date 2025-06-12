@@ -10,6 +10,7 @@ export interface ICustomer extends Document {
   email: string
   fullName: string
   phone: string
+  password: string
   address: {
     street: string
     city: string
@@ -46,7 +47,7 @@ export interface ICartItem {
 }
 
 export interface ICart extends Document {
-  customerId: string
+  sessionId: string
   items: ICartItem[]
   totalAmount: number
   createdAt: Date

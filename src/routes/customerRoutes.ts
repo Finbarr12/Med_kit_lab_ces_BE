@@ -19,6 +19,10 @@ const customerValidation = [
   body("address.city").notEmpty().trim().withMessage("City is required"),
   body("address.state").notEmpty().trim().withMessage("State is required"),
   body("address.zipCode").notEmpty().trim().withMessage("Zip code is required"),
+  // Add password validation
+  body("password")
+    .isLength({ min: 6 })
+    .withMessage("Password must be at least 6 characters"),
 ]
 
 const updateCustomerValidation = [

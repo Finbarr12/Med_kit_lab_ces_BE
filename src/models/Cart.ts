@@ -29,9 +29,8 @@ const CartItemSchema: Schema = new Schema(
 
 const CartSchema: Schema = new Schema(
   {
-    customerId: {
-      type: Schema.Types.ObjectId,
-      ref: "Customer",
+    sessionId: {
+      type: String,
       required: true,
       unique: true,
     },

@@ -2,6 +2,7 @@ import type { Request, Response } from "express"
 import { validationResult } from "express-validator"
 import Order from "../models/Order"
 import Product from "../models/Product"
+import Customer from "../models/Customer"
 
 export const createOrder = async (req: Request, res: Response) => {
   try {
@@ -10,7 +11,15 @@ export const createOrder = async (req: Request, res: Response) => {
       return res.status(400).json({ errors: errors.array() })
     }
 
-    const { customerInfo, items } = req.body
+    const { customerInfo, items, customerId } = req.body
+
+    // If customerId is provided, verify the customer exists
+    if (customerId) {
+      const customer = await Customer.findById(customerId)
+      if (!customer) {
+        return res.status(404).json({ message: "Customer not found" })
+      }
+    }
 
     // Validate products and calculate total
     let totalAmount = 0
@@ -47,6 +56,7 @@ export const createOrder = async (req: Request, res: Response) => {
       customerInfo,
       items: validatedItems,
       totalAmount,
+      ...(customerId && { customerId }), // Only add customerId if provided
     })
 
     await order.save()

@@ -23,10 +23,10 @@ const removeFromCartValidation = [
 ]
 
 // Routes
-router.get("/:customerId", getCart)
-router.post("/:customerId/add", addToCartValidation, addToCart)
-router.put("/:customerId/update", updateCartValidation, updateCartItem)
-router.delete("/:customerId/remove", removeFromCartValidation, removeFromCart)
-router.delete("/:customerId/clear", clearCart)
+router.get("/:sessionId", getCart)
+router.post("/:sessionId/add", addToCartValidation, addToCart)
+router.put("/:sessionId/update", updateCartValidation, updateCartItem)
+router.delete("/:sessionId/remove", removeFromCartValidation, removeFromCart)
+router.delete("/:sessionId/clear", clearCart)
 
 export default router

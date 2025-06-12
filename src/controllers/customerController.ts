@@ -9,7 +9,7 @@ export const createCustomer = async (req: Request, res: Response) => {
       return res.status(400).json({ errors: errors.array() })
     }
 
-    const { email, fullName, phone, address } = req.body
+    const { email, fullName, phone, password, address } = req.body
 
     // Check if customer already exists
     const existingCustomer = await Customer.findOne({ email })
@@ -21,6 +21,7 @@ export const createCustomer = async (req: Request, res: Response) => {
       email,
       fullName,
       phone,
+      password,
       address,
     })
 
