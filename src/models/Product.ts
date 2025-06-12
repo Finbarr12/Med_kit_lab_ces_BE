@@ -1,5 +1,5 @@
-import mongoose, { Schema } from "mongoose"
-import type { IProduct, IBrand } from "../types"
+import mongoose, { Schema } from "mongoose";
+import type { IProduct, IBrand } from "../types";
 
 const BrandSchema: Schema = new Schema(
   {
@@ -19,8 +19,8 @@ const BrandSchema: Schema = new Schema(
       min: 0,
     },
   },
-  { _id: false },
-)
+  { _id: false }
+);
 
 const ProductSchema: Schema = new Schema(
   {
@@ -58,7 +58,7 @@ const ProductSchema: Schema = new Schema(
   },
   {
     timestamps: true,
-  },
-)
+  }
+);
 
-export default mongoose.model<IProduct>("Product", ProductSchema)
+export default mongoose.model<IProduct>("Product", ProductSchema);

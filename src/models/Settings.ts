@@ -1,24 +1,24 @@
-import mongoose, { Schema } from "mongoose"
+import mongoose, { Schema, Document } from "mongoose";
 
 interface IStoreInfo {
-  name: string
-  address: string
-  phone: string
-  email: string
-  logo?: string
-  description?: string
+  name: string;
+  address: string;
+  phone: string;
+  email: string;
+  logo?: string;
+  description?: string;
 }
 
 interface IBankInfo {
-  bankName: string
-  accountNumber: string
-  accountName: string
+  bankName: string;
+  accountNumber: string;
+  accountName: string;
 }
 
 export interface ISettings extends Document {
-  storeInfo: IStoreInfo
-  bankInfo: IBankInfo
-  updatedAt: Date
+  storeInfo: IStoreInfo;
+  bankInfo: IBankInfo;
+  updatedAt: Date;
 }
 
 const StoreInfoSchema = new Schema(
@@ -30,8 +30,8 @@ const StoreInfoSchema = new Schema(
     logo: { type: String, trim: true },
     description: { type: String, trim: true },
   },
-  { _id: false },
-)
+  { _id: false }
+);
 
 const BankInfoSchema = new Schema(
   {
@@ -39,8 +39,8 @@ const BankInfoSchema = new Schema(
     accountNumber: { type: String, required: true, trim: true },
     accountName: { type: String, required: true, trim: true },
   },
-  { _id: false },
-)
+  { _id: false }
+);
 
 const SettingsSchema = new Schema(
   {
@@ -49,7 +49,7 @@ const SettingsSchema = new Schema(
   },
   {
     timestamps: true,
-  },
-)
+  }
+);
 
-export default mongoose.model<ISettings>("Settings", SettingsSchema)
+export default mongoose.model<ISettings>("Settings", SettingsSchema);
