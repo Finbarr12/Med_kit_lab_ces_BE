@@ -3,9 +3,7 @@ import type { Document } from "mongoose"
 export interface IUser extends Document {
   email: string
   password: string
-  role: "admin"
-  createdAt: Date
-  updatedAt: Date
+  comparePassword(candidatePassword: string): Promise<boolean>
 }
 
 export interface ICustomer extends Document {
@@ -89,9 +87,29 @@ export interface IPayment extends Document {
   paymentProof: string
   status: "pending" | "approved" | "rejected"
   customerInfo: ICustomerInfo
-  approvedBy?: string
   approvedAt?: Date
   rejectionReason?: string
   createdAt: Date
+  updatedAt: Date
+}
+
+export interface IStoreInfo {
+  name: string
+  address: string
+  phone: string
+  email: string
+  logo?: string
+  description?: string
+}
+
+export interface IBankInfo {
+  bankName: string
+  accountNumber: string
+  accountName: string
+}
+
+export interface ISettings extends Document {
+  storeInfo: IStoreInfo
+  bankInfo: IBankInfo
   updatedAt: Date
 }

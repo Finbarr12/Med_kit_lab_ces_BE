@@ -12,6 +12,7 @@ import paymentRoutes from "./routes/paymentRoutes"
 import customerRoutes from "./routes/customerRoutes"
 import cartRoutes from "./routes/cartRoutes"
 import userProductRoutes from "./routes/userProductRoutes"
+import settingsRoutes from "./routes/settingsRoutes"
 
 // Load environment variables
 dotenv.config()
@@ -32,6 +33,7 @@ app.use("/api/payments", paymentRoutes)
 app.use("/api/customers", customerRoutes)
 app.use("/api/cart", cartRoutes)
 app.use("/api/user/products", userProductRoutes)
+app.use("/api/settings", settingsRoutes)
 
 // Health check route
 app.get("/api/health", (req, res) => {
