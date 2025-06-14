@@ -50,10 +50,7 @@ export const setup = async (req: Request, res: Response) => {
 
     res.status(201).json({
       message: "Admin setup successful",
-      user: {
-        id: user._id,
-        email: user.email,
-      },
+      user,
     });
   } catch (error: any) {
     res.status(500).json({ message: "Server error", error: error.message });

@@ -48,10 +48,7 @@ const setup = async (req, res) => {
         await user.save();
         res.status(201).json({
             message: "Admin setup successful",
-            user: {
-                id: user._id,
-                email: user.email,
-            },
+            user,
         });
     }
     catch (error) {
