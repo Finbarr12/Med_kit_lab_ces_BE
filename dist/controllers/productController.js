@@ -8,17 +8,19 @@ const Product_1 = __importDefault(require("../models/Product"));
 const createProduct = async (req, res) => {
     try {
         const { productName, category, description, brands } = req.body;
-        const productImage = req.file?.path; // Cloudinary secure_url
-        if (!productImage) {
-            return res.status(400).json({ message: "Product image is required" });
+        const productImages = req.files.map((file) => file.path);
+        if (!productImages || productImages.length === 0) {
+            return res
+                .status(400)
+                .json({ message: "At least one product image is required" });
         }
         const product = new Product_1.default({
             productName,
             category,
             description,
             brands: typeof brands === "string" ? JSON.parse(brands) : brands,
-            productImage, // This will be the Cloudinary secure_url
-            createdBy: "admin", // Since we only have one admin
+            productImages, // Array of Cloudinary secure URLs
+            createdBy: "admin",
         });
         await product.save();
         res.status(201).json({
@@ -80,7 +82,7 @@ exports.getProductById = getProductById;
 const updateProduct = async (req, res) => {
     try {
         const { productName, category, description, brands } = req.body;
-        const productImage = req.file?.path; // Cloudinary secure_url
+        const uploadedImages = req.files || [];
         const updateData = {};
         if (productName)
             updateData.productName = productName;
@@ -88,10 +90,14 @@ const updateProduct = async (req, res) => {
             updateData.category = category;
         if (description)
             updateData.description = description;
-        if (brands)
-            updateData.brands = typeof brands === "string" ? JSON.parse(brands) : brands;
-        if (productImage)
-            updateData.productImage = productImage;
+        if (brands) {
+            updateData.brands =
+                typeof brands === "string" ? JSON.parse(brands) : brands;
+        }
+        if (uploadedImages.length > 0) {
+            const productImages = uploadedImages.map((file) => file.path); // Cloudinary secure_url
+            updateData.productImages = productImages;
+        }
         const product = await Product_1.default.findByIdAndUpdate(req.params.id, updateData, {
             new: true,
             runValidators: true,

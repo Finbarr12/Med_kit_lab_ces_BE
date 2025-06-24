@@ -39,7 +39,6 @@ const StoreInfoSchema = new mongoose_1.Schema({
     address: { type: String, required: true, trim: true },
     phone: { type: String, required: true, trim: true },
     email: { type: String, required: true, trim: true },
-    logo: { type: String, trim: true },
     description: { type: String, trim: true },
 }, { _id: false });
 const BankInfoSchema = new mongoose_1.Schema({

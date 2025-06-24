@@ -47,8 +47,8 @@ const ProductSchema: Schema = new Schema(
         message: "At least one brand is required",
       },
     },
-    productImage: {
-      type: String,
+    productImages: {
+      type: [String],
       required: true,
     },
     createdBy: {

@@ -61,11 +61,8 @@ const updateStoreInfo = async (req, res) => {
             settings.storeInfo.address = address || settings.storeInfo.address;
             settings.storeInfo.phone = phone || settings.storeInfo.phone;
             settings.storeInfo.email = email || settings.storeInfo.email;
-            settings.storeInfo.description = description || settings.storeInfo.description;
-        }
-        // Update logo if provided
-        if (logo) {
-            settings.storeInfo.logo = logo;
+            settings.storeInfo.description =
+                description || settings.storeInfo.description;
         }
         await settings.save();
         res.json({
@@ -102,8 +99,10 @@ const updateBankInfo = async (req, res) => {
         else {
             // Update existing bank info
             settings.bankInfo.bankName = bankName || settings.bankInfo.bankName;
-            settings.bankInfo.accountNumber = accountNumber || settings.bankInfo.accountNumber;
-            settings.bankInfo.accountName = accountName || settings.bankInfo.accountName;
+            settings.bankInfo.accountNumber =
+                accountNumber || settings.bankInfo.accountNumber;
+            settings.bankInfo.accountName =
+                accountName || settings.bankInfo.accountName;
         }
         await settings.save();
         res.json({

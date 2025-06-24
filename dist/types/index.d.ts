@@ -29,7 +29,7 @@ export interface IProduct extends Document {
     category: string;
     description: string;
     brands: IBrand[];
-    productImage: string;
+    productImage: [string];
     createdBy: string;
     createdAt: Date;
     updatedAt: Date;

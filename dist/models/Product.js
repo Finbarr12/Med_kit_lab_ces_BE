@@ -75,8 +75,8 @@ const ProductSchema = new mongoose_1.Schema({
             message: "At least one brand is required",
         },
     },
-    productImage: {
-        type: String,
+    productImages: {
+        type: [String],
         required: true,
     },
     createdBy: {

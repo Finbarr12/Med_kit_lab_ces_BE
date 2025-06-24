@@ -1,10 +1,10 @@
-import type { Request, Response } from "express"
-import Settings from "../models/Settings"
+import type { Request, Response } from "express";
+import Settings from "../models/Settings";
 
 export const getSettings = async (req: Request, res: Response) => {
   try {
     // There should only be one settings document
-    let settings = await Settings.findOne()
+    let settings = await Settings.findOne();
 
     // If no settings exist, create default settings
     if (!settings) {
@@ -21,22 +21,22 @@ export const getSettings = async (req: Request, res: Response) => {
           accountNumber: "0000000000",
           accountName: "Medkit Store",
         },
-      })
+      });
     }
 
-    res.json({ settings })
+    res.json({ settings });
   } catch (error: any) {
-    res.status(500).json({ message: "Server error", error: error.message })
+    res.status(500).json({ message: "Server error", error: error.message });
   }
-}
+};
 
 export const updateStoreInfo = async (req: Request, res: Response) => {
   try {
-    const { name, address, phone, email, description } = req.body
-    const logo = req.file?.path // Cloudinary URL if uploaded
+    const { name, address, phone, email, description } = req.body;
+    const logo = req.file?.path; // Cloudinary URL if uploaded
 
     // Find settings or create if not exists
-    let settings = await Settings.findOne()
+    let settings = await Settings.findOne();
     if (!settings) {
       settings = new Settings({
         storeInfo: {
@@ -51,38 +51,34 @@ export const updateStoreInfo = async (req: Request, res: Response) => {
           accountNumber: "0000000000",
           accountName: "Default Name",
         },
-      })
+      });
     } else {
       // Update existing store info
-      settings.storeInfo.name = name || settings.storeInfo.name
-      settings.storeInfo.address = address || settings.storeInfo.address
-      settings.storeInfo.phone = phone || settings.storeInfo.phone
-      settings.storeInfo.email = email || settings.storeInfo.email
-      settings.storeInfo.description = description || settings.storeInfo.description
+      settings.storeInfo.name = name || settings.storeInfo.name;
+      settings.storeInfo.address = address || settings.storeInfo.address;
+      settings.storeInfo.phone = phone || settings.storeInfo.phone;
+      settings.storeInfo.email = email || settings.storeInfo.email;
+      settings.storeInfo.description =
+        description || settings.storeInfo.description;
     }
 
-    // Update logo if provided
-    if (logo) {
-      settings.storeInfo.logo = logo
-    }
-
-    await settings.save()
+    await settings.save();
 
     res.json({
       message: "Store information updated successfully",
       settings,
-    })
+    });
   } catch (error: any) {
-    res.status(500).json({ message: "Server error", error: error.message })
+    res.status(500).json({ message: "Server error", error: error.message });
   }
-}
+};
 
 export const updateBankInfo = async (req: Request, res: Response) => {
   try {
-    const { bankName, accountNumber, accountName } = req.body
+    const { bankName, accountNumber, accountName } = req.body;
 
     // Find settings or create if not exists
-    let settings = await Settings.findOne()
+    let settings = await Settings.findOne();
     if (!settings) {
       settings = new Settings({
         storeInfo: {
@@ -97,21 +93,23 @@ export const updateBankInfo = async (req: Request, res: Response) => {
           accountNumber,
           accountName,
         },
-      })
+      });
     } else {
       // Update existing bank info
-      settings.bankInfo.bankName = bankName || settings.bankInfo.bankName
-      settings.bankInfo.accountNumber = accountNumber || settings.bankInfo.accountNumber
-      settings.bankInfo.accountName = accountName || settings.bankInfo.accountName
+      settings.bankInfo.bankName = bankName || settings.bankInfo.bankName;
+      settings.bankInfo.accountNumber =
+        accountNumber || settings.bankInfo.accountNumber;
+      settings.bankInfo.accountName =
+        accountName || settings.bankInfo.accountName;
     }
 
-    await settings.save()
+    await settings.save();
 
     res.json({
       message: "Bank information updated successfully",
       settings,
-    })
+    });
   } catch (error: any) {
-    res.status(500).json({ message: "Server error", error: error.message })
+    res.status(500).json({ message: "Server error", error: error.message });
   }
-}
+};

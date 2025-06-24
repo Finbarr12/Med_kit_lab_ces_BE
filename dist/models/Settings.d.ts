@@ -4,7 +4,6 @@ interface IStoreInfo {
     address: string;
     phone: string;
     email: string;
-    logo?: string;
     description?: string;
 }
 interface IBankInfo {

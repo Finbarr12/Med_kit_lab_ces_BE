@@ -5,7 +5,6 @@ interface IStoreInfo {
   address: string;
   phone: string;
   email: string;
-  logo?: string;
   description?: string;
 }
 
@@ -27,7 +26,6 @@ const StoreInfoSchema = new Schema(
     address: { type: String, required: true, trim: true },
     phone: { type: String, required: true, trim: true },
     email: { type: String, required: true, trim: true },
-    logo: { type: String, trim: true },
     description: { type: String, trim: true },
   },
   { _id: false }

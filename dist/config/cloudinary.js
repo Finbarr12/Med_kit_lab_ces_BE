@@ -34,7 +34,7 @@ const paymentStorage = new multer_storage_cloudinary_1.CloudinaryStorage({
 // Multer upload middleware for products
 exports.uploadProductImage = (0, multer_1.default)({
     storage: productStorage,
-    limits: { fileSize: 5 * 1024 * 1024 }, // 5MB limit
+    limits: { fileSize: 5 * 1024 * 1024 }, // 5MB per file
     fileFilter: (req, file, cb) => {
         if (file.mimetype.startsWith("image/")) {
             cb(null, true);
@@ -43,7 +43,7 @@ exports.uploadProductImage = (0, multer_1.default)({
             cb(new Error("Only image files are allowed"));
         }
     },
-});
+}).array("productImages", 5); // max 5 images, adjust as needed
 // Multer upload middleware for payments
 exports.uploadPaymentProof = (0, multer_1.default)({
     storage: paymentStorage,

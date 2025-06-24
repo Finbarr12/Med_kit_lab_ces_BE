@@ -1,11 +1,14 @@
-import { Router } from "express"
-import { getSettings, updateStoreInfo, updateBankInfo } from "../controllers/settingsController"
-import { uploadProductImage } from "../config/cloudinary"
+import { Router } from "express";
+import {
+  getSettings,
+  updateStoreInfo,
+  updateBankInfo,
+} from "../controllers/settingsController";
 
-const router = Router()
+const router = Router();
 
-router.get("/", getSettings)
-router.put("/store", uploadProductImage.single("logo"), updateStoreInfo)
-router.put("/bank", updateBankInfo)
+router.get("/", getSettings);
+router.put("/store", updateStoreInfo);
+router.put("/bank", updateBankInfo);
 
-export default router
+export default router;

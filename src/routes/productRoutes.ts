@@ -1,19 +1,19 @@
-import { Router } from "express"
-import { uploadProductImage } from "../config/cloudinary"
+import { Router } from "express";
+import { uploadProductImage } from "../config/cloudinary";
 import {
   createProduct,
   getAllProducts,
   getProductById,
   updateProduct,
   deleteProduct,
-} from "../controllers/productController"
+} from "../controllers/productController";
 
-const router = Router()
+const router = Router();
 
-router.post("/", uploadProductImage.single("productImage"), createProduct)
-router.get("/", getAllProducts)
-router.get("/:id", getProductById)
-router.put("/:id", uploadProductImage.single("productImage"), updateProduct)
-router.delete("/:id", deleteProduct)
+router.post("/", uploadProductImage, createProduct);
+router.get("/", getAllProducts);
+router.get("/:id", getProductById);
+router.put("/:id", uploadProductImage, updateProduct);
+router.delete("/:id", deleteProduct);
 
-export default router
+export default router;
