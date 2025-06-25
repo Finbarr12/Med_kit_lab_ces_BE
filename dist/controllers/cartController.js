@@ -119,7 +119,7 @@ const updateCartItem = async (req, res) => {
         }
         cart.items[itemIndex].quantity = quantity;
         await cart.save();
-        await cart.populate("items.product", "productName category productImage");
+        await cart.populate("items.product", "productName category productImages");
         res.json({
             message: "Cart item updated successfully",
             cart,
