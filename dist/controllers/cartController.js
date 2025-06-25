@@ -10,7 +10,7 @@ const Product_1 = __importDefault(require("../models/Product"));
 const getCart = async (req, res) => {
     try {
         const { sessionId } = req.params;
-        const cart = await Cart_1.default.findOne({ sessionId }).populate("items.product", "productName category productImage");
+        const cart = await Cart_1.default.findOne({ sessionId }).populate("items.product", "productName category productImages");
         if (!cart) {
             return res.json({
                 cart: {

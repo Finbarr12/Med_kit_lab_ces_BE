@@ -7,7 +7,7 @@ export const getCart = async (req: Request, res: Response) => {
   try {
     const { sessionId } = req.params
 
-    const cart = await Cart.findOne({ sessionId }).populate("items.product", "productName category productImage")
+    const cart = await Cart.findOne({ sessionId }).populate("items.product", "productName category productImages")
 
     if (!cart) {
       return res.json({
