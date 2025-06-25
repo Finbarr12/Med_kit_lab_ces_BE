@@ -168,7 +168,7 @@ export const removeFromCart = async (req: Request, res: Response) => {
     );
 
     await cart.save();
-    await cart.populate("items.product", "productName category productImage");
+    await cart.populate("items.product", "productName category productImages");
 
     res.json({
       message: "Item removed from cart successfully",

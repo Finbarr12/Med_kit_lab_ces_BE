@@ -140,7 +140,7 @@ const removeFromCart = async (req, res) => {
         }
         cart.items = cart.items.filter((item) => !(item.product.toString() === productId && item.brandName === brandName));
         await cart.save();
-        await cart.populate("items.product", "productName category productImage");
+        await cart.populate("items.product", "productName category productImages");
         res.json({
             message: "Item removed from cart successfully",
             cart,
