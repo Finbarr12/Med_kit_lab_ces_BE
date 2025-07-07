@@ -1,0 +1,1193 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Medkit Backend API Documentation</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background-color: #f8f9fa;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 40px 0;
+            text-align: center;
+            margin-bottom: 30px;
+            border-radius: 10px;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            font-size: 1.2rem;
+            opacity: 0.9;
+        }
+
+        .nav {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 30px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .nav ul {
+            list-style: none;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+
+        .nav a {
+            color: #667eea;
+            text-decoration: none;
+            font-weight: 500;
+            padding: 8px 16px;
+            border-radius: 5px;
+            transition: all 0.3s;
+        }
+
+        .nav a:hover {
+            background: #667eea;
+            color: white;
+        }
+
+        .section {
+            background: white;
+            margin-bottom: 30px;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .section-header {
+            background: #667eea;
+            color: white;
+            padding: 20px;
+            font-size: 1.5rem;
+            font-weight: 600;
+        }
+
+        .section-content {
+            padding: 30px;
+        }
+
+        .workflow-step {
+            background: #f8f9fa;
+            border-left: 4px solid #667eea;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 0 8px 8px 0;
+        }
+
+        .workflow-step h3 {
+            color: #667eea;
+            margin-bottom: 10px;
+            font-size: 1.3rem;
+        }
+
+        .workflow-step .step-number {
+            background: #667eea;
+            color: white;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            margin-right: 15px;
+        }
+
+        .endpoint {
+            background: #f8f9fa;
+            border: 1px solid #e9ecef;
+            border-radius: 8px;
+            margin: 15px 0;
+            overflow: hidden;
+        }
+
+        .endpoint-header {
+            background: #e9ecef;
+            padding: 15px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .method {
+            padding: 5px 12px;
+            border-radius: 4px;
+            font-weight: bold;
+            font-size: 0.9rem;
+        }
+
+        .method.get { background: #28a745; color: white; }
+        .method.post { background: #007bff; color: white; }
+        .method.put { background: #ffc107; color: black; }
+        .method.delete { background: #dc3545; color: white; }
+
+        .endpoint-url {
+            font-family: 'Courier New', monospace;
+            font-weight: bold;
+            color: #495057;
+        }
+
+        .endpoint-body {
+            padding: 20px;
+        }
+
+        .code-block {
+            background: #2d3748;
+            color: #e2e8f0;
+            padding: 20px;
+            border-radius: 8px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9rem;
+            overflow-x: auto;
+            margin: 15px 0;
+        }
+
+        .code-block .comment {
+            color: #68d391;
+        }
+
+        .code-block .string {
+            color: #fbb6ce;
+        }
+
+        .code-block .number {
+            color: #90cdf4;
+        }
+
+        .flow-diagram {
+            background: white;
+            border: 2px solid #e9ecef;
+            border-radius: 10px;
+            padding: 30px;
+            margin: 20px 0;
+            text-align: center;
+        }
+
+        .flow-step {
+            display: inline-block;
+            background: #667eea;
+            color: white;
+            padding: 15px 25px;
+            margin: 10px;
+            border-radius: 25px;
+            font-weight: 500;
+            position: relative;
+        }
+
+        .flow-step:not(:last-child)::after {
+            content: '→';
+            position: absolute;
+            right: -25px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #667eea;
+            font-size: 1.5rem;
+            font-weight: bold;
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 0.8rem;
+            font-weight: 500;
+            margin: 2px;
+        }
+
+        .status-pending { background: #fff3cd; color: #856404; }
+        .status-submitted { background: #cce5ff; color: #004085; }
+        .status-approved { background: #d4edda; color: #155724; }
+        .status-rejected { background: #f8d7da; color: #721c24; }
+        .status-processing { background: #e2e3e5; color: #383d41; }
+
+        .table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+        }
+
+        .table th,
+        .table td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #e9ecef;
+        }
+
+        .table th {
+            background: #f8f9fa;
+            font-weight: 600;
+            color: #495057;
+        }
+
+        .alert {
+            padding: 15px;
+            border-radius: 8px;
+            margin: 15px 0;
+        }
+
+        .alert-info {
+            background: #cce5ff;
+            border-left: 4px solid #007bff;
+            color: #004085;
+        }
+
+        .alert-warning {
+            background: #fff3cd;
+            border-left: 4px solid #ffc107;
+            color: #856404;
+        }
+
+        .alert-success {
+            background: #d4edda;
+            border-left: 4px solid #28a745;
+            color: #155724;
+        }
+
+        @media (max-width: 768px) {
+            .nav ul {
+                flex-direction: column;
+            }
+            
+            .flow-step {
+                display: block;
+                margin: 10px 0;
+            }
+            
+            .flow-step::after {
+                content: '↓';
+                right: 50%;
+                top: 100%;
+                transform: translateX(50%);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Medkit Backend API</h1>
+            <p>Complete Documentation & Workflow Guide</p>
+        </div>
+
+        <div class="nav">
+            <ul>
+                <li><a href="#overview">Overview</a></li>
+                <li><a href="#workflow">Workflow</a></li>
+                <li><a href="#authentication">Authentication</a></li>
+                <li><a href="#products">Products</a></li>
+                <li><a href="#checkout">Checkout</a></li>
+                <li><a href="#payments">Payments</a></li>
+                <li><a href="#orders">Orders</a></li>
+                <li><a href="#settings">Settings</a></li>
+            </ul>
+        </div>
+
+        <!-- OVERVIEW SECTION -->
+        <div class="section" id="overview">
+            <div class="section-header">System Overview</div>
+            <div class="section-content">
+                <p>The Medkit Backend API is designed for a medical supplies e-commerce platform with external payment processing and manual verification. The system uses a unique checkout flow where orders are only created after payment verification and delivery details are provided.</p>
+                
+                <div class="alert alert-info">
+                    <strong>Key Features:</strong>
+                    <ul>
+                        <li>Single admin management system</li>
+                        <li>External payment with proof upload</li>
+                        <li>Manual payment verification</li>
+                        <li>Orders created only after full verification</li>
+                        <li>Cloudinary integration for file storage</li>
+                    </ul>
+                </div>
+
+                <h3>Base URL</h3>
+                <div class="code-block">
+                    <span class="comment"># Development</span><br>
+                    http://localhost:5000/api<br><br>
+                    <span class="comment"># Production</span><br>
+                    https://your-domain.com/api
+                </div>
+            </div>
+        </div>
+
+        <!-- WORKFLOW SECTION -->
+        <div class="section" id="workflow">
+            <div class="section-header">Complete Workflow</div>
+            <div class="section-content">
+                <h3>Customer Journey Flow</h3>
+                <div class="flow-diagram">
+                    <div class="flow-step">Register</div>
+                    <div class="flow-step">Browse Products</div>
+                    <div class="flow-step">Add to Cart</div>
+                    <div class="flow-step">Checkout Session</div>
+                    <div class="flow-step">Upload Payment</div>
+                    <div class="flow-step">Admin Verification</div>
+                    <div class="flow-step">Delivery Details</div>
+                    <div class="flow-step">Order Created</div>
+                </div>
+
+                <div class="workflow-step">
+                    <h3><span class="step-number">1</span>Customer Registration & Profile</h3>
+                    <p>Customer creates a profile with personal information and address. No login required for shopping.</p>
+                    <div class="code-block">
+POST /api/customers
+{
+  <span class="string">"email"</span>: <span class="string">"customer@example.com"</span>,
+  <span class="string">"fullName"</span>: <span class="string">"John Doe"</span>,
+  <span class="string">"phone"</span>: <span class="string">"+234123456789"</span>,
+  <span class="string">"address"</span>: {
+    <span class="string">"street"</span>: <span class="string">"123 Main Street"</span>,
+    <span class="string">"city"</span>: <span class="string">"Lagos"</span>,
+    <span class="string">"state"</span>: <span class="string">"Lagos"</span>,
+    <span class="string">"zipCode"</span>: <span class="string">"100001"</span>
+  }
+}
+                    </div>
+                </div>
+
+                <div class="workflow-step">
+                    <h3><span class="step-number">2</span>Product Browsing & Cart Management</h3>
+                    <p>Customer browses products, views details, and adds items to cart with specific brand selection.</p>
+                    <div class="code-block">
+<span class="comment"># Browse products</span>
+GET /api/user/products?category=Pain%20Relief&page=1&limit=12
+
+<span class="comment"># Add to cart</span>
+POST /api/cart/customer_id/add
+{
+  <span class="string">"productId"</span>: <span class="string">"product_id"</span>,
+  <span class="string">"brandName"</span>: <span class="string">"Panadol"</span>,
+  <span class="string">"quantity"</span>: <span class="number">2</span>
+}
+                    </div>
+                </div>
+
+                <div class="workflow-step">
+                    <h3><span class="step-number">3</span>Checkout Session Creation</h3>
+                    <p><strong>Important:</strong> This creates a checkout session, NOT an order. The cart is cleared and bank details are provided for payment.</p>
+                    <div class="code-block">
+POST /api/checkout/customer_id
+{
+  <span class="string">"shippingFee"</span>: <span class="number">1000</span>,
+  <span class="string">"notes"</span>: <span class="string">"Handle with care"</span>
+}
+
+<span class="comment"># Response includes bank details for payment</span>
+{
+  <span class="string">"message"</span>: <span class="string">"Checkout session created. Please upload payment proof."</span>,
+  <span class="string">"session"</span>: { ... },
+  <span class="string">"bankInfo"</span>: {
+    <span class="string">"bankName"</span>: <span class="string">"First Bank"</span>,
+    <span class="string">"accountNumber"</span>: <span class="string">"1234567890"</span>,
+    <span class="string">"accountName"</span>: <span class="string">"MedKit Store"</span>
+  }
+}
+                    </div>
+                </div>
+
+                <div class="workflow-step">
+                    <h3><span class="step-number">4</span>Payment Proof Upload</h3>
+                    <p>Customer makes external payment and uploads proof image. No payment method or reference needed - just the image.</p>
+                    <div class="code-block">
+POST /api/payments/upload/session_id
+Content-Type: multipart/form-data
+
+{
+  <span class="string">"paymentProof"</span>: &lt;image_file&gt;
+}
+
+<span class="comment"># Session status changes to "submitted"</span>
+                    </div>
+                </div>
+
+                <div class="workflow-step">
+                    <h3><span class="step-number">5</span>Admin Payment Verification</h3>
+                    <p>Admin reviews payment proof and either approves or rejects with notes.</p>
+                    <div class="code-block">
+<span class="comment"># Approve payment</span>
+PUT /api/payments/session_id/approve
+{
+  <span class="string">"adminNotes"</span>: <span class="string">"Payment verified successfully"</span>
+}
+
+<span class="comment"># Or reject payment</span>
+PUT /api/payments/session_id/reject
+{
+  <span class="string">"rejectionReason"</span>: <span class="string">"Unclear payment proof"</span>,
+  <span class="string">"adminNotes"</span>: <span class="string">"Please resubmit with clearer image"</span>
+}
+                    </div>
+                </div>
+
+                <div class="workflow-step">
+                    <h3><span class="step-number">6</span>Delivery Details & Order Creation</h3>
+                    <p><strong>Critical Step:</strong> Only after payment approval can customer add delivery details. This step creates the actual order and reduces stock.</p>
+                    <div class="code-block">
+POST /api/delivery/session_id
+{
+  <span class="string">"fullName"</span>: <span class="string">"John Doe"</span>,
+  <span class="string">"phone"</span>: <span class="string">"+234123456789"</span>,
+  <span class="string">"address"</span>: <span class="string">"123 Main Street"</span>,
+  <span class="string">"city"</span>: <span class="string">"Lagos"</span>,
+  <span class="string">"state"</span>: <span class="string">"Lagos"</span>,
+  <span class="string">"zipCode"</span>: <span class="string">"100001"</span>,
+  <span class="string">"landmark"</span>: <span class="string">"Near the big tree"</span>,
+  <span class="string">"deliveryInstructions"</span>: <span class="string">"Call when you arrive"</span>
+}
+
+<span class="comment"># Response includes the newly created order</span>
+{
+  <span class="string">"message"</span>: <span class="string">"Order created successfully!"</span>,
+  <span class="string">"order"</span>: { ... }
+}
+                    </div>
+                </div>
+
+                <div class="workflow-step">
+                    <h3><span class="step-number">7</span>Order Processing & Tracking</h3>
+                    <p>Admin processes the order, updates status, and provides tracking information.</p>
+                    <div class="code-block">
+<span class="comment"># Update order status</span>
+PUT /api/orders/order_id/status
+{
+  <span class="string">"status"</span>: <span class="string">"shipped"</span>,
+  <span class="string">"trackingNumber"</span>: <span class="string">"TRK123456789"</span>
+}
+
+<span class="comment"># Customer can track order</span>
+GET /api/orders/number/ORD-1234567890-001
+                    </div>
+                </div>
+
+                <h3>Status Flow</h3>
+                <div class="alert alert-info">
+                    <strong>Checkout Session Statuses:</strong><br>
+                    <span class="status-badge status-pending">pending</span> → 
+                    <span class="status-badge status-submitted">submitted</span> → 
+                    <span class="status-badge status-approved">approved</span> → 
+                    <strong>Order Created</strong>
+                </div>
+
+                <div class="alert alert-success">
+                    <strong>Order Statuses:</strong><br>
+                    <span class="status-badge status-processing">processing</span> → 
+                    <span class="status-badge status-processing">shipped</span> → 
+                    <span class="status-badge status-approved">delivered</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- AUTHENTICATION SECTION -->
+        <div class="section" id="authentication">
+            <div class="section-header">Authentication</div>
+            <div class="section-content">
+                <p>Simple authentication system with a single admin account. No JWT tokens - uses session-based approach.</p>
+
+                <div class="endpoint">
+                    <div class="endpoint-header">
+                        <span class="method post">POST</span>
+                        <span class="endpoint-url">/api/auth/setup</span>
+                    </div>
+                    <div class="endpoint-body">
+                        <p><strong>Initial Admin Setup</strong> - One-time setup for the admin account</p>
+                        <div class="code-block">
+{
+  <span class="string">"email"</span>: <span class="string">"admin@medkit.com"</span>,
+  <span class="string">"password"</span>: <span class="string">"securepassword"</span>
+}
+                        </div>
+                    </div>
+                </div>
+
+                <div class="endpoint">
+                    <div class="endpoint-header">
+                        <span class="method post">POST</span>
+                        <span class="endpoint-url">/api/auth/login</span>
+                    </div>
+                    <div class="endpoint-body">
+                        <p><strong>Admin Login</strong></p>
+                        <div class="code-block">
+{
+  <span class="string">"email"</span>: <span class="string">"admin@medkit.com"</span>,
+  <span class="string">"password"</span>: <span class="string">"password"</span>
+}
+                        </div>
+                    </div>
+                </div>
+
+                <div class="endpoint">
+                    <div class="endpoint-header">
+                        <span class="method get">GET</span>
+                        <span class="endpoint-url">/api/auth/admin</span>
+                    </div>
+                    <div class="endpoint-body">
+                        <p><strong>Get Admin Information</strong></p>
+                    </div>
+                </div>
+
+                <div class="endpoint">
+                    <div class="endpoint-header">
+                        <span class="method put">PUT</span>
+                        <span class="endpoint-url">/api/auth/change-password</span>
+                    </div>
+                    <div class="endpoint-body">
+                        <p><strong>Change Admin Password</strong></p>
+                        <div class="code-block">
+{
+  <span class="string">"currentPassword"</span>: <span class="string">"oldpassword"</span>,
+  <span class="string">"newPassword"</span>: <span class="string">"newpassword"</span>
+}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- PRODUCTS SECTION -->
+        <div class="section" id="products">
+            <div class="section-header">Product Management</div>
+            <div class="section-content">
+                <p>Products support multiple brand variants with individual pricing and stock levels. Images are stored on Cloudinary.</p>
+
+                <div class="endpoint">
+                    <div class="endpoint-header">
+                        <span class="method post">POST</span>
+                        <span class="endpoint-url">/api/products</span>
+                    </div>
+                    <div class="endpoint-body">
+                        <p><strong>Create Product</strong> - Requires image upload</p>
+                        <div class="code-block">
+Content-Type: multipart/form-data
+
+{
+  <span class="string">"productName"</span>: <span class="string">"Paracetamol"</span>,
+  <span class="string">"category"</span>: <span class="string">"Pain Relief"</span>,
+  <span class="string">"description"</span>: <span class="string">"Effective pain relief medication"</span>,
+  <span class="string">"brands"</span>: JSON.stringify([
+    {<span class="string">"name"</span>: <span class="string">"Panadol"</span>, <span class="string">"price"</span>: <span class="number">500</span>, <span class="string">"stock"</span>: <span class="number">100</span>},
+    {<span class="string">"name"</span>: <span class="string">"Emzor"</span>, <span class="string">"price"</span>: <span class="number">450</span>, <span class="string">"stock"</span>: <span class="number">50</span>}
+  ]),
+  <span class="string">"productImage"</span>: &lt;file&gt;
+}
+                        </div>
+                    </div>
+                </div>
+
+                <div class="endpoint">
+                    <div class="endpoint-header">
+                        <span class="method get">GET</span>
+                        <span class="endpoint-url">/api/products</span>
+                    </div>
+                    <div class="endpoint-body">
+                        <p><strong>Get All Products</strong> - Admin view with pagination</p>
+                        <div class="code-block">
+<span class="comment"># Query parameters</span>
+?page=1&limit=10&category=Pain%20Relief&search=paracetamol
+                        </div>
+                    </div>
+                </div>
+
+                <div class="endpoint">
+                    <div class="endpoint-header">
+                        <span class="method get">GET</span>
+                        <span class="endpoint-url">/api/user/products</span>
+                    </div>
+                    <div class="endpoint-body">
+                        <p><strong>Browse Products</strong> - Customer view with filtering</p>
+                        <div class="code-block">
+<span class="comment"># Advanced filtering for customers</span>
+?page=1&limit=12&category=Pain%20Relief&minPrice=100&maxPrice=1000&sortBy=price&sortOrder=asc
+                        </div>
+                    </div>
+                </div>
+
+                <div class="endpoint">
+                    <div class="endpoint-header">
+                        <span class="method get">GET</span>
+                        <span class="endpoint-url">/api/user/products/featured</span>
+                    </div>
+                    <div class="endpoint-body">
+                        <p><strong>Get Featured Products</strong></p>
+                    </div>
+                </div>
+
+                <div class="endpoint">
+                    <div class="endpoint-header">
+                        <span class="method get">GET</span>
+                        <span class="endpoint-url">/api/user/products/search</span>
+                    </div>
+                    <div class="endpoint-body">
+                        <p><strong>Search Products</strong></p>
+                        <div class="code-block">
+?q=paracetamol&page=1&limit=12
+                        </div>
+                    </div>
+                </div>
+
+                <div class="alert alert-warning">
+                    <strong>Note:</strong> Product stock is only reduced when an actual order is created (after delivery details are added), not during checkout session creation.
+                </div>
+            </div>
+        </div>
+
+        <!-- CHECKOUT SECTION -->
+        <div class="section" id="checkout">
+            <div class="section-header">Checkout Process</div>
+            <div class="section-content">
+                <p>The checkout process creates sessions, not orders. Orders are only created after payment verification and delivery details.</p>
+
+                <div class="endpoint">
+                    <div class="endpoint-header">
+                        <span class="method get">GET</span>
+                        <span class="endpoint-url">/api/checkout/summary/:customerId</span>
+                    </div>
+                    <div class="endpoint-body">
+                        <p><strong>Get Checkout Summary</strong> - Preview before creating session</p>
+                    </div>
+                </div>
+
+                <div class="endpoint">
+                    <div class="endpoint-header">
+                        <span class="method post">POST</span>
+                        <span class="endpoint-url">/api/checkout/:customerId</span>
+                    </div>
+                    <div class="endpoint-body">
+                        <p><strong>Create Checkout Session</strong> - Converts cart to session and clears cart</p>
+                        <div class="code-block">
+{
+  <span class="string">"shippingFee"</span>: <span class="number">1000</span>,
+  <span class="string">"notes"</span>: <span class="string">"Handle with care"</span>
+}
+
+<span class="comment"># Response includes bank details for payment</span>
+{
+  <span class="string">"message"</span>: <span class="string">"Checkout session created. Please upload payment proof."</span>,
+  <span class="string">"session"</span>: {
+    <span class="string">"sessionNumber"</span>: <span class="string">"CHK-1234567890-001"</span>,
+    <span class="string">"totalAmount"</span>: <span class="number">5500</span>,
+    <span class="string">"paymentStatus"</span>: <span class="string">"pending"</span>
+  },
+  <span class="string">"bankInfo"</span>: {
+    <span class="string">"bankName"</span>: <span class="string">"First Bank"</span>,
+    <span class="string">"accountNumber"</span>: <span class="string">"1234567890"</span>,
+    <span class="string">"accountName"</span>: <span class="string">"MedKit Store"</span>
+  }
+}
+                        </div>
+                    </div>
+                </div>
+
+                <div class="endpoint">
+                    <div class="endpoint-header">
+                        <span class="method get">GET</span>
+                        <span class="endpoint-url">/api/checkout/session/:sessionId</span>
+                    </div>
+                    <div class="endpoint-body">
+                        <p><strong>Get Checkout Session Details</strong></p>
+                    </div>
+                </div>
+
+                <div class="endpoint">
+                    <div class="endpoint-header">
+                        <span class="method get">GET</span>
+                        <span class="endpoint-url">/api/checkout/customer/:customerId/sessions</span>
+                    </div>
+                    <div class="endpoint-body">
+                        <p><strong>Get Customer's Checkout Sessions</strong> - View all sessions for a customer</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- PAYMENTS SECTION -->
+        <div class="section" id="payments">
+            <div class="section-header">Payment Management</div>
+            <div class="section-content">
+                <p>Simple payment proof upload system. No payment gateways - customers upload proof images for manual verification.</p>
+
+                <div class="endpoint">
+                    <div class="endpoint-header">
+                        <span class="method post">POST</span>
+                        <span class="endpoint-url">/api/payments/upload/:sessionId</span>
+                    </div>
+                    <div class="endpoint-body">
+                        <p><strong>Upload Payment Proof</strong> - Customer uploads payment proof image</p>
+                        <div class="code-block">
+Content-Type: multipart/form-data
+
+{
+  <span class="string">"paymentProof"</span>: &lt;image_file&gt;
+}
+
+<span class="comment"># Supported formats: JPG, JPEG, PNG, GIF, WebP, PDF</span>
+<span class="comment"># Max size: 10MB</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="endpoint">
+                    <div class="endpoint-header">
+                        <span class="method get">GET</span>
+                        <span class="endpoint-url">/api/payments</span>
+                    </div>
+                    <div class="endpoint-body">
+                        <p><strong>Get All Payment Requests</strong> - Admin view of all payment proofs</p>
+                        <div class="code-block">
+<span class="comment"># Filter by status</span>
+?status=submitted&page=1&limit=10
+                        </div>
+                    </div>
+                </div>
+
+                <div class="endpoint">
+                    <div class="endpoint-header">
+                        <span class="method put">PUT</span>
+                        <span class="endpoint-url">/api/payments/:sessionId/approve</span>
+                    </div>
+                    <div class="endpoint-body">
+                        <p><strong>Approve Payment</strong> - Admin approves payment proof</p>
+                        <div class="code-block">
+{
+  <span class="string">"adminNotes"</span>: <span class="string">"Payment verified successfully"</span>
+}
+                        </div>
+                    </div>
+                </div>
+
+                <div class="endpoint">
+                    <div class="endpoint-header">
+                        <span class="method put">PUT</span>
+                        <span class="endpoint-url">/api/payments/:sessionId/reject</span>
+                    </div>
+                    <div class="endpoint-body">
+                        <p><strong>Reject Payment</strong> - Admin rejects payment proof</p>
+                        <div class="code-block">
+{
+  <span class="string">"rejectionReason"</span>: <span class="string">"Payment proof is unclear"</span>,
+  <span class="string">"adminNotes"</span>: <span class="string">"Please resubmit with clearer image"</span>
+}
+                        </div>
+                    </div>
+                </div>
+
+                <div class="alert alert-info">
+                    <strong>Payment Flow:</strong> Customer uploads proof → Admin reviews → Approve/Reject → If approved, customer can add delivery details
+                </div>
+            </div>
+        </div>
+
+        <!-- ORDERS SECTION -->
+        <div class="section" id="orders">
+            <div class="section-header">Order Management</div>
+            <div class="section-content">
+                <p>Orders are only created after payment approval and delivery details are provided. This is when stock is actually reduced.</p>
+
+                <div class="endpoint">
+                    <div class="endpoint-header">
+                        <span class="method post">POST</span>
+                        <span class="endpoint-url">/api/delivery/:sessionId</span>
+                    </div>
+                    <div class="endpoint-body">
+                        <p><strong>Add Delivery Details & Create Order</strong> - This creates the actual order</p>
+                        <div class="code-block">
+{
+  <span class="string">"fullName"</span>: <span class="string">"John Doe"</span>,
+  <span class="string">"phone"</span>: <span class="string">"+234123456789"</span>,
+  <span class="string">"address"</span>: <span class="string">"123 Main Street"</span>,
+  <span class="string">"city"</span>: <span class="string">"Lagos"</span>,
+  <span class="string">"state"</span>: <span class="string">"Lagos"</span>,
+  <span class="string">"zipCode"</span>: <span class="string">"100001"</span>,
+  <span class="string">"landmark"</span>: <span class="string">"Near the big tree"</span>,
+  <span class="string">"deliveryInstructions"</span>: <span class="string">"Call when you arrive"</span>
+}
+
+<span class="comment"># Response includes the newly created order</span>
+{
+  <span class="string">"message"</span>: <span class="string">"Order created successfully!"</span>,
+  <span class="string">"order"</span>: {
+    <span class="string">"orderNumber"</span>: <span class="string">"ORD-1234567890-001"</span>,
+    <span class="string">"status"</span>: <span class="string">"processing"</span>,
+    <span class="string">"paymentStatus"</span>: <span class="string">"confirmed"</span>
+  }
+}
+                        </div>
+                    </div>
+                </div>
+
+                <div class="endpoint">
+                    <div class="endpoint-header">
+                        <span class="method get">GET</span>
+                        <span class="endpoint-url">/api/orders</span>
+                    </div>
+                    <div class="endpoint-body">
+                        <p><strong>Get All Orders</strong> - Admin view</p>
+                        <div class="code-block">
+<span class="comment"># Filter by status</span>
+?status=processing&page=1&limit=10
+                        </div>
+                    </div>
+                </div>
+
+                <div class="endpoint">
+                    <div class="endpoint-header">
+                        <span class="method get">GET</span>
+                        <span class="endpoint-url">/api/orders/customer/:customerId</span>
+                    </div>
+                    <div class="endpoint-body">
+                        <p><strong>Get Customer Orders</strong> - Customer's order history</p>
+                    </div>
+                </div>
+
+                <div class="endpoint">
+                    <div class="endpoint-header">
+                        <span class="method get">GET</span>
+                        <span class="endpoint-url">/api/orders/number/:orderNumber</span>
+                    </div>
+                    <div class="endpoint-body">
+                        <p><strong>Track Order by Number</strong> - Public order tracking</p>
+                    </div>
+                </div>
+
+                <div class="endpoint">
+                    <div class="endpoint-header">
+                        <span class="method put">PUT</span>
+                        <span class="endpoint-url">/api/orders/:orderId/status</span>
+                    </div>
+                    <div class="endpoint-body">
+                        <p><strong>Update Order Status</strong> - Admin updates order progress</p>
+                        <div class="code-block">
+{
+  <span class="string">"status"</span>: <span class="string">"shipped"</span>,
+  <span class="string">"trackingNumber"</span>: <span class="string">"TRK123456789"</span>
+}
+
+<span class="comment"># Valid statuses: processing, shipped, delivered, cancelled</span>
+                        </div>
+                    </div>
+                </div>
+
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Status</th>
+                            <th>Description</th>
+                            <th>Next Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><span class="status-badge status-processing">processing</span></td>
+                            <td>Order is being prepared</td>
+                            <td>Admin updates to shipped</td>
+                        </tr>
+                        <tr>
+                            <td><span class="status-badge status-processing">shipped</span></td>
+                            <td>Order has been shipped</td>
+                            <td>Admin updates to delivered</td>
+                        </tr>
+                        <tr>
+                            <td><span class="status-badge status-approved">delivered</span></td>
+                            <td>Order delivered successfully</td>
+                            <td>Process complete</td>
+                        </tr>
+                        <tr>
+                            <td><span class="status-badge status-rejected">cancelled</span></td>
+                            <td>Order was cancelled</td>
+                            <td>Stock restored</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- SETTINGS SECTION -->
+        <div class="section" id="settings">
+            <div class="section-header">Settings Management</div>
+            <div class="section-content">
+                <p>Configure store information and bank details for customer payments.</p>
+
+                <div class="endpoint">
+                    <div class="endpoint-header">
+                        <span class="method get">GET</span>
+                        <span class="endpoint-url">/api/settings</span>
+                    </div>
+                    <div class="endpoint-body">
+                        <p><strong>Get All Settings</strong></p>
+                    </div>
+                </div>
+
+                <div class="endpoint">
+                    <div class="endpoint-header">
+                        <span class="method put">PUT</span>
+                        <span class="endpoint-url">/api/settings/store</span>
+                    </div>
+                    <div class="endpoint-body">
+                        <p><strong>Update Store Information</strong> - Can include logo upload</p>
+                        <div class="code-block">
+Content-Type: multipart/form-data
+
+{
+  <span class="string">"name"</span>: <span class="string">"MedKit Pharmacy"</span>,
+  <span class="string">"address"</span>: <span class="string">"123 Health Street, Lagos"</span>,
+  <span class="string">"phone"</span>: <span class="string">"+234123456789"</span>,
+  <span class="string">"email"</span>: <span class="string">"contact@medkit.com"</span>,
+  <span class="string">"description"</span>: <span class="string">"Your trusted medical supplier"</span>,
+  <span class="string">"logo"</span>: &lt;image_file&gt;
+}
+                        </div>
+                    </div>
+                </div>
+
+                <div class="endpoint">
+                    <div class="endpoint-header">
+                        <span class="method put">PUT</span>
+                        <span class="endpoint-url">/api/settings/bank</span>
+                    </div>
+                    <div class="endpoint-body">
+                        <p><strong>Update Bank Details</strong> - For customer payments</p>
+                        <div class="code-block">
+{
+  <span class="string">"bankName"</span>: <span class="string">"First Bank"</span>,
+  <span class="string">"accountNumber"</span>: <span class="string">"1234567890"</span>,
+  <span class="string">"accountName"</span>: <span class="string">"MedKit Pharmacy Ltd"</span>
+}
+                        </div>
+                    </div>
+                </div>
+
+                <div class="alert alert-success">
+                    <strong>Important:</strong> Bank details are automatically provided to customers during checkout for payment.
+                </div>
+            </div>
+        </div>
+
+        <!-- CART MANAGEMENT -->
+        <div class="section" id="cart">
+            <div class="section-header">Cart Management</div>
+            <div class="section-content">
+                <p>Shopping cart functionality for customers before checkout.</p>
+
+                <div class="endpoint">
+                    <div class="endpoint-header">
+                        <span class="method get">GET</span>
+                        <span class="endpoint-url">/api/cart/:customerId</span>
+                    </div>
+                    <div class="endpoint-body">
+                        <p><strong>Get Customer Cart</strong></p>
+                    </div>
+                </div>
+
+                <div class="endpoint">
+                    <div class="endpoint-header">
+                        <span class="method post">POST</span>
+                        <span class="endpoint-url">/api/cart/:customerId/add</span>
+                    </div>
+                    <div class="endpoint-body">
+                        <p><strong>Add Item to Cart</strong></p>
+                        <div class="code-block">
+{
+  <span class="string">"productId"</span>: <span class="string">"product_id"</span>,
+  <span class="string">"brandName"</span>: <span class="string">"Panadol"</span>,
+  <span class="string">"quantity"</span>: <span class="number">2</span>
+}
+                        </div>
+                    </div>
+                </div>
+
+                <div class="endpoint">
+                    <div class="endpoint-header">
+                        <span class="method put">PUT</span>
+                        <span class="endpoint-url">/api/cart/:customerId/update</span>
+                    </div>
+                    <div class="endpoint-body">
+                        <p><strong>Update Cart Item Quantity</strong></p>
+                        <div class="code-block">
+{
+  <span class="string">"productId"</span>: <span class="string">"product_id"</span>,
+  <span class="string">"brandName"</span>: <span class="string">"Panadol"</span>,
+  <span class="string">"quantity"</span>: <span class="number">3</span>
+}
+                        </div>
+                    </div>
+                </div>
+
+                <div class="endpoint">
+                    <div class="endpoint-header">
+                        <span class="method delete">DELETE</span>
+                        <span class="endpoint-url">/api/cart/:customerId/remove</span>
+                    </div>
+                    <div class="endpoint-body">
+                        <p><strong>Remove Item from Cart</strong></p>
+                        <div class="code-block">
+{
+  <span class="string">"productId"</span>: <span class="string">"product_id"</span>,
+  <span class="string">"brandName"</span>: <span class="string">"Panadol"</span>
+}
+                        </div>
+                    </div>
+                </div>
+
+                <div class="endpoint">
+                    <div class="endpoint-header">
+                        <span class="method delete">DELETE</span>
+                        <span class="endpoint-url">/api/cart/:customerId/clear</span>
+                    </div>
+                    <div class="endpoint-body">
+                        <p><strong>Clear Entire Cart</strong></p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ERROR HANDLING -->
+        <div class="section" id="errors">
+            <div class="section-header">Error Handling</div>
+            <div class="section-content">
+                <h3>HTTP Status Codes</h3>
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Code</th>
+                            <th>Status</th>
+                            <th>Description</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>200</td>
+                            <td>OK</td>
+                            <td>Request successful</td>
+                        </tr>
+                        <tr>
+                            <td>201</td>
+                            <td>Created</td>
+                            <td>Resource created successfully</td>
+                        </tr>
+                        <tr>
+                            <td>400</td>
+                            <td>Bad Request</td>
+                            <td>Invalid request data</td>
+                        </tr>
+                        <tr>
+                            <td>404</td>
+                            <td>Not Found</td>
+                            <td>Resource not found</td>
+                        </tr>
+                        <tr>
+                            <td>500</td>
+                            <td>Server Error</td>
+                            <td>Internal server error</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <h3>Error Response Format</h3>
+                <div class="code-block">
+{
+  <span class="string">"message"</span>: <span class="string">"Error description"</span>,
+  <span class="string">"error"</span>: <span class="string">"Detailed error message"</span>
+}
+                </div>
+
+                <h3>Validation Errors</h3>
+                <div class="code-block">
+{
+  <span class="string">"errors"</span>: [
+    {
+      <span class="string">"field"</span>: <span class="string">"email"</span>,
+      <span class="string">"message"</span>: <span class="string">"Please provide a valid email"</span>
+    }
+  ]
+}
+                </div>
+            </div>
+        </div>
+
+        <!-- ENVIRONMENT SETUP -->
+        <div class="section" id="environment">
+            <div class="section-header">Environment Setup</div>
+            <div class="section-content">
+                <h3>Required Environment Variables</h3>
+                <div class="code-block">
+<span class="comment"># Server Configuration</span>
+PORT=5000
+NODE_ENV=development
+
+<span class="comment"># Database</span>
+MONGODB_URI=mongodb://localhost:27017/medkit-app
+
+<span class="comment"># Cloudinary Configuration</span>
+CLOUDINARY_CLOUD_NAME=your_cloud_name
+CLOUDINARY_API_KEY=your_api_key
+CLOUDINARY_API_SECRET=your_api_secret
+                </div>
+
+                <h3>Installation & Setup</h3>
+                <div class="code-block">
+<span class="comment"># Install dependencies</span>
+npm install
+
+<span class="comment"># Copy environment file</span>
+cp .env.example .env
+
+<span class="comment"># Edit .env with your configuration</span>
+
+<span class="comment"># Run development server</span>
+npm run dev
+
+<span class="comment"># Build for production</span>
+npm run build
+npm start
+                </div>
+
+                <div class="alert alert-warning">
+                    <strong>Important:</strong> Make sure to set up your Cloudinary account and MongoDB database before running the application.
+                </div>
+            </div>
+        </div>
+
+        <div class="section">
+            <div class="section-header">Summary</div>
+            <div class="section-content">
+                <p>This API provides a complete e-commerce backend with external payment processing and manual verification. The unique checkout flow ensures that orders are only created after full payment verification and delivery details are provided.</p>
+                
+                <div class="alert alert-success">
+                    <strong>Key Benefits:</strong>
+                    <ul>
+                        <li>No premature order creation</li>
+                        <li>Manual payment verification for security</li>
+                        <li>Stock protection until order confirmation</li>
+                        <li>Simple external payment integration</li>
+                        <li>Complete order lifecycle management</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
