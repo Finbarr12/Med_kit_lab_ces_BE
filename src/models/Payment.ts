@@ -21,6 +21,10 @@ const PaymentSchema: Schema = new Schema(
       ref: "Order",
       required: true,
     },
+    orderNumber: {
+      type: String,
+      required: true,
+    },
     amount: {
       type: Number,
       required: true,
@@ -29,6 +33,15 @@ const PaymentSchema: Schema = new Schema(
     paymentProof: {
       type: String,
       required: true,
+    },
+    paymentMethod: {
+      type: String,
+      enum: ["bank_transfer", "mobile_money", "cash"],
+      default: "bank_transfer",
+    },
+    transactionReference: {
+      type: String,
+      trim: true,
     },
     status: {
       type: String,
@@ -39,14 +52,14 @@ const PaymentSchema: Schema = new Schema(
       type: CustomerInfoSchema,
       required: true,
     },
-    approvedBy: {
-      type: Schema.Types.ObjectId,
-      ref: "User",
-    },
     approvedAt: {
       type: Date,
     },
     rejectionReason: {
+      type: String,
+      trim: true,
+    },
+    adminNotes: {
       type: String,
       trim: true,
     },

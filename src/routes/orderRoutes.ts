@@ -6,6 +6,7 @@ import {
   getOrderById,
   getOrderByNumber,
   updateOrderStatus,
+  getCustomerOrders,
 } from "../controllers/orderController"
 
 const router = Router()
@@ -31,6 +32,7 @@ const statusValidation = [
 // Routes
 router.post("/", orderValidation, createOrder)
 router.get("/", getAllOrders)
+router.get("/customer/:customerId", getCustomerOrders)
 router.get("/number/:orderNumber", getOrderByNumber)
 router.get("/:id", getOrderById)
 router.put("/:id/status", statusValidation, updateOrderStatus)

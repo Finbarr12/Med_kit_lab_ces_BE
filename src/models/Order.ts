@@ -14,6 +14,20 @@ const CustomerInfoSchema: Schema = new Schema(
   { _id: false },
 )
 
+const DeliveryDetailsSchema: Schema = new Schema(
+  {
+    fullName: { type: String, required: true, trim: true },
+    phone: { type: String, required: true, trim: true },
+    address: { type: String, required: true, trim: true },
+    city: { type: String, required: true, trim: true },
+    state: { type: String, required: true, trim: true },
+    zipCode: { type: String, required: true, trim: true },
+    landmark: { type: String, trim: true },
+    deliveryInstructions: { type: String, trim: true },
+  },
+  { _id: false },
+)
+
 const OrderItemSchema: Schema = new Schema(
   {
     product: {
@@ -68,10 +82,40 @@ const OrderSchema: Schema = new Schema(
       required: true,
       min: 0,
     },
+    shippingFee: {
+      type: Number,
+      default: 0,
+      min: 0,
+    },
     status: {
       type: String,
-      enum: ["pending", "confirmed", "processing", "shipped", "delivered", "cancelled"],
+      enum: [
+        "pending_payment",
+        "payment_submitted",
+        "payment_confirmed",
+        "awaiting_delivery_details",
+        "processing",
+        "shipped",
+        "delivered",
+        "cancelled",
+      ],
+      default: "pending_payment",
+    },
+    paymentStatus: {
+      type: String,
+      enum: ["pending", "submitted", "confirmed", "failed"],
       default: "pending",
+    },
+    deliveryDetails: {
+      type: DeliveryDetailsSchema,
+    },
+    notes: {
+      type: String,
+      trim: true,
+    },
+    trackingNumber: {
+      type: String,
+      trim: true,
     },
   },
   {

@@ -13,6 +13,8 @@ import customerRoutes from "./routes/customerRoutes"
 import cartRoutes from "./routes/cartRoutes"
 import userProductRoutes from "./routes/userProductRoutes"
 import settingsRoutes from "./routes/settingsRoutes"
+import checkoutRoutes from "./routes/checkoutRoutes"
+import deliveryRoutes from "./routes/deliveryRoutes"
 
 // Load environment variables
 dotenv.config()
@@ -34,6 +36,8 @@ app.use("/api/customers", customerRoutes)
 app.use("/api/cart", cartRoutes)
 app.use("/api/user/products", userProductRoutes)
 app.use("/api/settings", settingsRoutes)
+app.use("/api/checkout", checkoutRoutes)
+app.use("/api/delivery", deliveryRoutes)
 
 // Health check route
 app.get("/api/health", (req, res) => {
@@ -50,7 +54,7 @@ app.use((error: any, req: express.Request, res: express.Response, next: express.
 
   if (error instanceof multer.MulterError) {
     if (error.code === "LIMIT_FILE_SIZE") {
-      return res.status(400).json({ message: "File too large. Maximum size is 5MB." })
+      return res.status(400).json({ message: "File too large. Maximum size is 10MB." })
     }
   }
 

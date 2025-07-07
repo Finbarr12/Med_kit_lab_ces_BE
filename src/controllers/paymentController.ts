@@ -2,9 +2,10 @@ import type { Request, Response } from "express"
 import Payment from "../models/Payment"
 import Order from "../models/Order"
 
-export const createPaymentRequest = async (req: Request, res: Response) => {
+export const uploadPaymentProof = async (req: Request, res: Response) => {
   try {
-    const { orderId, customerInfo } = req.body
+    const { orderId } = req.params
+    const { paymentMethod = "bank_transfer", transactionReference } = req.body
     const paymentProof = req.file?.path // Cloudinary secure_url
 
     if (!paymentProof) {
@@ -17,25 +18,39 @@ export const createPaymentRequest = async (req: Request, res: Response) => {
       return res.status(404).json({ message: "Order not found" })
     }
 
+    if (order.status !== "pending_payment") {
+      return res.status(400).json({ message: "Order is not awaiting payment" })
+    }
+
     // Check if payment request already exists
     const existingPayment = await Payment.findOne({ orderId })
     if (existingPayment) {
-      return res.status(400).json({ message: "Payment request already exists for this order" })
+      return res.status(400).json({ message: "Payment proof already submitted for this order" })
     }
 
     const payment = new Payment({
       orderId,
+      orderNumber: order.orderNumber,
       amount: order.totalAmount,
-      paymentProof, // Cloudinary secure_url
-      customerInfo,
+      paymentProof,
+      paymentMethod,
+      transactionReference,
+      customerInfo: order.customerInfo,
     })
 
     await payment.save()
+
+    // Update order status
+    order.status = "payment_submitted"
+    order.paymentStatus = "submitted"
+    await order.save()
+
     await payment.populate("orderId", "orderNumber totalAmount")
 
     res.status(201).json({
-      message: "Payment request submitted successfully",
+      message: "Payment proof uploaded successfully. Awaiting admin verification.",
       payment,
+      nextStep: "await_verification",
     })
   } catch (error: any) {
     res.status(500).json({ message: "Server error", error: error.message })
@@ -54,7 +69,7 @@ export const getAllPaymentRequests = async (req: Request, res: Response) => {
     }
 
     const payments = await Payment.find(query)
-      .populate("orderId", "orderNumber totalAmount status")
+      .populate("orderId", "orderNumber totalAmount status items")
       .sort({ createdAt: -1 })
       .limit(limit * 1)
       .skip((page - 1) * limit)
@@ -74,7 +89,13 @@ export const getAllPaymentRequests = async (req: Request, res: Response) => {
 
 export const getPaymentById = async (req: Request, res: Response) => {
   try {
-    const payment = await Payment.findById(req.params.id).populate("orderId", "orderNumber totalAmount status items")
+    const payment = await Payment.findById(req.params.id).populate({
+      path: "orderId",
+      populate: {
+        path: "items.product",
+        select: "productName category productImage",
+      },
+    })
 
     if (!payment) {
       return res.status(404).json({ message: "Payment not found" })
@@ -88,11 +109,14 @@ export const getPaymentById = async (req: Request, res: Response) => {
 
 export const approvePayment = async (req: Request, res: Response) => {
   try {
+    const { adminNotes } = req.body
+
     const payment = await Payment.findByIdAndUpdate(
       req.params.id,
       {
         status: "approved",
         approvedAt: new Date(),
+        adminNotes,
       },
       { new: true },
     ).populate("orderId", "orderNumber")
@@ -101,11 +125,14 @@ export const approvePayment = async (req: Request, res: Response) => {
       return res.status(404).json({ message: "Payment not found" })
     }
 
-    // Update order status to confirmed
-    await Order.findByIdAndUpdate(payment.orderId, { status: "confirmed" })
+    // Update order status
+    const order = await Order.findByIdAndUpdate(payment.orderId, {
+      status: "awaiting_delivery_details",
+      paymentStatus: "confirmed",
+    })
 
     res.json({
-      message: "Payment approved successfully",
+      message: "Payment approved successfully. Customer can now add delivery details.",
       payment,
     })
   } catch (error: any) {
@@ -115,13 +142,18 @@ export const approvePayment = async (req: Request, res: Response) => {
 
 export const rejectPayment = async (req: Request, res: Response) => {
   try {
-    const { rejectionReason } = req.body
+    const { rejectionReason, adminNotes } = req.body
+
+    if (!rejectionReason) {
+      return res.status(400).json({ message: "Rejection reason is required" })
+    }
 
     const payment = await Payment.findByIdAndUpdate(
       req.params.id,
       {
         status: "rejected",
         rejectionReason,
+        adminNotes,
         approvedAt: new Date(),
       },
       { new: true },
@@ -131,10 +163,32 @@ export const rejectPayment = async (req: Request, res: Response) => {
       return res.status(404).json({ message: "Payment not found" })
     }
 
+    // Update order status back to pending payment
+    await Order.findByIdAndUpdate(payment.orderId, {
+      status: "pending_payment",
+      paymentStatus: "failed",
+    })
+
     res.json({
-      message: "Payment rejected successfully",
+      message: "Payment rejected. Customer needs to resubmit payment proof.",
       payment,
     })
+  } catch (error: any) {
+    res.status(500).json({ message: "Server error", error: error.message })
+  }
+}
+
+export const getPaymentByOrderId = async (req: Request, res: Response) => {
+  try {
+    const { orderId } = req.params
+
+    const payment = await Payment.findOne({ orderId }).populate("orderId", "orderNumber totalAmount status")
+
+    if (!payment) {
+      return res.status(404).json({ message: "Payment not found for this order" })
+    }
+
+    res.json({ payment })
   } catch (error: any) {
     res.status(500).json({ message: "Server error", error: error.message })
   }

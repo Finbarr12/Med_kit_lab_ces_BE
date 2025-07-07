@@ -63,6 +63,17 @@ export interface ICustomerInfo {
   zipCode: string
 }
 
+export interface IDeliveryDetails {
+  fullName: string
+  phone: string
+  address: string
+  city: string
+  state: string
+  zipCode: string
+  landmark?: string
+  deliveryInstructions?: string
+}
+
 export interface IOrderItem {
   product: string
   brandName: string
@@ -76,19 +87,36 @@ export interface IOrder extends Document {
   customerInfo: ICustomerInfo
   items: IOrderItem[]
   totalAmount: number
-  status: "pending" | "confirmed" | "processing" | "shipped" | "delivered" | "cancelled"
+  shippingFee: number
+  status:
+    | "pending_payment"
+    | "payment_submitted"
+    | "payment_confirmed"
+    | "awaiting_delivery_details"
+    | "processing"
+    | "shipped"
+    | "delivered"
+    | "cancelled"
+  paymentStatus: "pending" | "submitted" | "confirmed" | "failed"
+  deliveryDetails?: IDeliveryDetails
+  notes?: string
+  trackingNumber?: string
   createdAt: Date
   updatedAt: Date
 }
 
 export interface IPayment extends Document {
   orderId: string
+  orderNumber: string
   amount: number
   paymentProof: string
+  paymentMethod: "bank_transfer" | "mobile_money" | "cash"
+  transactionReference?: string
   status: "pending" | "approved" | "rejected"
   customerInfo: ICustomerInfo
   approvedAt?: Date
   rejectionReason?: string
+  adminNotes?: string
   createdAt: Date
   updatedAt: Date
 }
