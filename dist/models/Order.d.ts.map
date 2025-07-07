@@ -1,1 +1,1 @@
-{"version":3,"file":"Order.d.ts","sourceRoot":"","sources":["../../src/models/Order.ts"],"names":[],"mappings":"AAAA,OAAO,QAAoB,MAAM,UAAU,CAAA;AAC3C,OAAO,KAAK,EAAE,MAAM,EAAc,MAAM,UAAU,CAAA;;;;AA4FlD,wBAA2D"}
+{"version":3,"file":"Order.d.ts","sourceRoot":"","sources":["../../src/models/Order.ts"],"names":[],"mappings":"AAAA,OAAO,QAAoB,MAAM,UAAU,CAAC;AAC5C,OAAO,KAAK,EAAE,MAAM,EAAc,MAAM,UAAU,CAAC;;;;AAiInD,wBAA4D"}

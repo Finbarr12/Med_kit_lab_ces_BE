@@ -10,7 +10,6 @@ export interface ICustomer extends Document {
   email: string;
   fullName: string;
   phone: string;
-  password: string;
   address: {
     street: string;
     city: string;
@@ -33,7 +32,7 @@ export interface IProduct extends Document {
   category: string;
   description: string;
   brands: IBrand[];
-  productImage: [string];
+  productImage: string;
   createdBy: string;
   createdAt: Date;
   updatedAt: Date;
@@ -47,9 +46,43 @@ export interface ICartItem {
 }
 
 export interface ICart extends Document {
-  sessionId: string;
+  customerId: string;
   items: ICartItem[];
   totalAmount: number;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export interface ICheckoutItem {
+  product: string;
+  brandName: string;
+  quantity: number;
+  price: number;
+}
+
+export interface IDeliveryDetails {
+  fullName: string;
+  phone: string;
+  address: string;
+  city: string;
+  state: string;
+  zipCode: string;
+  landmark?: string;
+  deliveryInstructions?: string;
+}
+
+export interface ICheckoutSession extends Document {
+  sessionNumber: string;
+  customerId: string;
+  items: ICheckoutItem[];
+  totalAmount: number;
+  shippingFee: number;
+  paymentProof?: string;
+  paymentStatus: "pending" | "submitted" | "approved" | "rejected";
+  deliveryDetails?: IDeliveryDetails;
+  rejectionReason?: string;
+  adminNotes?: string;
+  notes?: string;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -77,25 +110,12 @@ export interface IOrder extends Document {
   customerInfo: ICustomerInfo;
   items: IOrderItem[];
   totalAmount: number;
-  status:
-    | "pending"
-    | "confirmed"
-    | "processing"
-    | "shipped"
-    | "delivered"
-    | "cancelled";
-  createdAt: Date;
-  updatedAt: Date;
-}
-
-export interface IPayment extends Document {
-  orderId: string;
-  amount: number;
-  paymentProof: string;
-  status: "pending" | "approved" | "rejected";
-  customerInfo: ICustomerInfo;
-  approvedAt?: Date;
-  rejectionReason?: string;
+  shippingFee: number;
+  status: "processing" | "shipped" | "delivered" | "cancelled";
+  paymentStatus: "confirmed";
+  deliveryDetails: IDeliveryDetails;
+  notes?: string;
+  trackingNumber?: string;
   createdAt: Date;
   updatedAt: Date;
 }

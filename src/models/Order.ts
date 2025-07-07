@@ -1,5 +1,5 @@
-import mongoose, { Schema } from "mongoose"
-import type { IOrder, IOrderItem } from "../types"
+import mongoose, { Schema } from "mongoose";
+import type { IOrder, IOrderItem } from "../types";
 
 const CustomerInfoSchema: Schema = new Schema(
   {
@@ -11,8 +11,22 @@ const CustomerInfoSchema: Schema = new Schema(
     state: { type: String, required: true, trim: true },
     zipCode: { type: String, required: true, trim: true },
   },
-  { _id: false },
-)
+  { _id: false }
+);
+
+const DeliveryDetailsSchema: Schema = new Schema(
+  {
+    fullName: { type: String, required: true, trim: true },
+    phone: { type: String, required: true, trim: true },
+    address: { type: String, required: true, trim: true },
+    city: { type: String, required: true, trim: true },
+    state: { type: String, required: true, trim: true },
+    zipCode: { type: String, required: true, trim: true },
+    landmark: { type: String, trim: true },
+    deliveryInstructions: { type: String, trim: true },
+  },
+  { _id: false }
+);
 
 const OrderItemSchema: Schema = new Schema(
   {
@@ -37,8 +51,8 @@ const OrderItemSchema: Schema = new Schema(
       min: 0,
     },
   },
-  { _id: false },
-)
+  { _id: false }
+);
 
 const OrderSchema: Schema = new Schema(
   {
@@ -50,6 +64,7 @@ const OrderSchema: Schema = new Schema(
     customerId: {
       type: Schema.Types.ObjectId,
       ref: "Customer",
+      required: true,
     },
     customerInfo: {
       type: CustomerInfoSchema,
@@ -68,27 +83,49 @@ const OrderSchema: Schema = new Schema(
       required: true,
       min: 0,
     },
+    shippingFee: {
+      type: Number,
+      default: 0,
+      min: 0,
+    },
     status: {
       type: String,
-      enum: ["pending", "confirmed", "processing", "shipped", "delivered", "cancelled"],
-      default: "pending",
+      enum: ["processing", "shipped", "delivered", "cancelled"],
+      default: "processing",
+    },
+    paymentStatus: {
+      type: String,
+      enum: ["confirmed"],
+      default: "confirmed",
+    },
+    deliveryDetails: {
+      type: DeliveryDetailsSchema,
+      required: true,
+    },
+    notes: {
+      type: String,
+      trim: true,
+    },
+    trackingNumber: {
+      type: String,
+      trim: true,
     },
   },
   {
     timestamps: true,
-  },
-)
+  }
+);
 
 // Generate order number before saving
 OrderSchema.pre<IOrder>("save", async function (next) {
   if (!this.orderNumber) {
-    const timestamp = Date.now().toString()
+    const timestamp = Date.now().toString();
     const random = Math.floor(Math.random() * 1000)
       .toString()
-      .padStart(3, "0")
-    this.orderNumber = `ORD-${timestamp}-${random}`
+      .padStart(3, "0");
+    this.orderNumber = `ORD-${timestamp}-${random}`;
   }
-  next()
-})
+  next();
+});
 
-export default mongoose.model<IOrder>("Order", OrderSchema)
+export default mongoose.model<IOrder>("Order", OrderSchema);

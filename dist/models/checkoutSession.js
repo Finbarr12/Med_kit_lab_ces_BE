@@ -34,26 +34,7 @@ var __importStar = (this && this.__importStar) || (function () {
 })();
 Object.defineProperty(exports, "__esModule", { value: true });
 const mongoose_1 = __importStar(require("mongoose"));
-const CustomerInfoSchema = new mongoose_1.Schema({
-    fullName: { type: String, required: true, trim: true },
-    email: { type: String, required: true, trim: true, lowercase: true },
-    phone: { type: String, required: true, trim: true },
-    address: { type: String, required: true, trim: true },
-    city: { type: String, required: true, trim: true },
-    state: { type: String, required: true, trim: true },
-    zipCode: { type: String, required: true, trim: true },
-}, { _id: false });
-const DeliveryDetailsSchema = new mongoose_1.Schema({
-    fullName: { type: String, required: true, trim: true },
-    phone: { type: String, required: true, trim: true },
-    address: { type: String, required: true, trim: true },
-    city: { type: String, required: true, trim: true },
-    state: { type: String, required: true, trim: true },
-    zipCode: { type: String, required: true, trim: true },
-    landmark: { type: String, trim: true },
-    deliveryInstructions: { type: String, trim: true },
-}, { _id: false });
-const OrderItemSchema = new mongoose_1.Schema({
+const CheckoutItemSchema = new mongoose_1.Schema({
     product: {
         type: mongoose_1.Schema.Types.ObjectId,
         ref: "Product",
@@ -75,8 +56,18 @@ const OrderItemSchema = new mongoose_1.Schema({
         min: 0,
     },
 }, { _id: false });
-const OrderSchema = new mongoose_1.Schema({
-    orderNumber: {
+const DeliveryDetailsSchema = new mongoose_1.Schema({
+    fullName: { type: String, required: true, trim: true },
+    phone: { type: String, required: true, trim: true },
+    address: { type: String, required: true, trim: true },
+    city: { type: String, required: true, trim: true },
+    state: { type: String, required: true, trim: true },
+    zipCode: { type: String, required: true, trim: true },
+    landmark: { type: String, trim: true },
+    deliveryInstructions: { type: String, trim: true },
+}, { _id: false });
+const CheckoutSessionSchema = new mongoose_1.Schema({
+    sessionNumber: {
         type: String,
         required: true,
         unique: true,
@@ -86,17 +77,9 @@ const OrderSchema = new mongoose_1.Schema({
         ref: "Customer",
         required: true,
     },
-    customerInfo: {
-        type: CustomerInfoSchema,
-        required: true,
-    },
     items: {
-        type: [OrderItemSchema],
+        type: [CheckoutItemSchema],
         required: true,
-        validate: {
-            validator: (items) => items.length > 0,
-            message: "At least one item is required",
-        },
     },
     totalAmount: {
         type: Number,
@@ -108,41 +91,42 @@ const OrderSchema = new mongoose_1.Schema({
         default: 0,
         min: 0,
     },
-    status: {
+    paymentProof: {
         type: String,
-        enum: ["processing", "shipped", "delivered", "cancelled"],
-        default: "processing",
     },
     paymentStatus: {
         type: String,
-        enum: ["confirmed"],
-        default: "confirmed",
+        enum: ["pending", "submitted", "approved", "rejected"],
+        default: "pending",
     },
     deliveryDetails: {
         type: DeliveryDetailsSchema,
-        required: true,
     },
-    notes: {
+    rejectionReason: {
         type: String,
         trim: true,
     },
-    trackingNumber: {
+    adminNotes: {
+        type: String,
+        trim: true,
+    },
+    notes: {
         type: String,
         trim: true,
     },
 }, {
     timestamps: true,
 });
-// Generate order number before saving
-OrderSchema.pre("save", async function (next) {
-    if (!this.orderNumber) {
+// Generate session number before saving
+CheckoutSessionSchema.pre("save", async function (next) {
+    if (!this.sessionNumber) {
         const timestamp = Date.now().toString();
         const random = Math.floor(Math.random() * 1000)
             .toString()
             .padStart(3, "0");
-        this.orderNumber = `ORD-${timestamp}-${random}`;
+        this.sessionNumber = `CHK-${timestamp}-${random}`;
     }
     next();
 });
-exports.default = mongoose_1.default.model("Order", OrderSchema);
-//# sourceMappingURL=Order.js.map
+exports.default = mongoose_1.default.model("CheckoutSession", CheckoutSessionSchema);
+//# sourceMappingURL=checkoutSession.js.map

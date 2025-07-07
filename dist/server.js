@@ -17,6 +17,8 @@ const customerRoutes_1 = __importDefault(require("./routes/customerRoutes"));
 const cartRoutes_1 = __importDefault(require("./routes/cartRoutes"));
 const userProductRoutes_1 = __importDefault(require("./routes/userProductRoutes"));
 const settingsRoutes_1 = __importDefault(require("./routes/settingsRoutes"));
+const checkoutRoutes_1 = __importDefault(require("./routes/checkoutRoutes"));
+const deliveryRoutes_1 = __importDefault(require("./routes/deliveryRoutes"));
 // Load environment variables
 dotenv_1.default.config();
 const app = (0, express_1.default)();
@@ -34,6 +36,8 @@ app.use("/api/customers", customerRoutes_1.default);
 app.use("/api/cart", cartRoutes_1.default);
 app.use("/api/user/products", userProductRoutes_1.default);
 app.use("/api/settings", settingsRoutes_1.default);
+app.use("/api/checkout", checkoutRoutes_1.default);
+app.use("/api/delivery", deliveryRoutes_1.default);
 // Health check route
 app.get("/api/health", (req, res) => {
     res.json({
@@ -47,7 +51,9 @@ app.use((error, req, res, next) => {
     console.error("Error:", error);
     if (error instanceof multer_1.default.MulterError) {
         if (error.code === "LIMIT_FILE_SIZE") {
-            return res.status(400).json({ message: "File too large. Maximum size is 5MB." });
+            return res
+                .status(400)
+                .json({ message: "File too large. Maximum size is 10MB." });
         }
     }
     res.status(error.status || 500).json({
