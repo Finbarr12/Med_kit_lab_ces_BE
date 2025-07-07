@@ -1,11 +1,11 @@
 import type { Request, Response } from "express"
 import Cart from "../models/Cart"
-import Order from "../models/Order"
 import Product from "../models/Product"
 import Customer from "../models/Customer"
 import Settings from "../models/Settings"
+import CheckoutSession from "../models/CheckoutSession"
 
-export const createOrderFromCart = async (req: Request, res: Response) => {
+export const createCheckoutSession = async (req: Request, res: Response) => {
   try {
     const { customerId } = req.params
     const { shippingFee = 0, notes } = req.body
@@ -41,8 +41,8 @@ export const createOrderFromCart = async (req: Request, res: Response) => {
       }
     }
 
-    // Create order from cart
-    const orderItems = cart.items.map((item) => ({
+    // Create checkout session from cart
+    const sessionItems = cart.items.map((item) => ({
       product: item.product._id,
       brandName: item.brandName,
       quantity: item.quantity,
@@ -51,34 +51,16 @@ export const createOrderFromCart = async (req: Request, res: Response) => {
 
     const totalAmount = cart.totalAmount + shippingFee
 
-    const order = new Order({
+    const checkoutSession = new CheckoutSession({
       customerId,
-      customerInfo: {
-        fullName: customer.fullName,
-        email: customer.email,
-        phone: customer.phone,
-        address: customer.address.street,
-        city: customer.address.city,
-        state: customer.address.state,
-        zipCode: customer.address.zipCode,
-      },
-      items: orderItems,
+      items: sessionItems,
       totalAmount,
       shippingFee,
       notes,
-      status: "pending_payment",
     })
 
-    await order.save()
-    await order.populate("items.product", "productName category productImage")
-
-    // Update stock for all items
-    for (const cartItem of cart.items) {
-      await Product.updateOne(
-        { _id: cartItem.product, "brands.name": cartItem.brandName },
-        { $inc: { "brands.$.stock": -cartItem.quantity } },
-      )
-    }
+    await checkoutSession.save()
+    await checkoutSession.populate("items.product", "productName category productImage")
 
     // Clear the cart
     cart.items = []
@@ -90,8 +72,8 @@ export const createOrderFromCart = async (req: Request, res: Response) => {
     const bankInfo = settings?.bankInfo || null
 
     res.status(201).json({
-      message: "Order created successfully. Please proceed with payment.",
-      order,
+      message: "Checkout session created. Please upload payment proof.",
+      session: checkoutSession,
       bankInfo,
       nextStep: "upload_payment_proof",
     })
@@ -100,7 +82,7 @@ export const createOrderFromCart = async (req: Request, res: Response) => {
   }
 }
 
-export const getOrderSummary = async (req: Request, res: Response) => {
+export const getCheckoutSummary = async (req: Request, res: Response) => {
   try {
     const { customerId } = req.params
 
@@ -116,18 +98,63 @@ export const getOrderSummary = async (req: Request, res: Response) => {
       return res.status(404).json({ message: "Customer not found" })
     }
 
-    // Get store settings for shipping info
+    // Get store settings
     const settings = await Settings.findOne()
 
     res.json({
       cart,
       customer,
       storeInfo: settings?.storeInfo || null,
+      bankInfo: settings?.bankInfo || null,
       summary: {
         subtotal: cart.totalAmount,
-        shippingFee: 0, // Can be calculated based on location
+        shippingFee: 0,
         total: cart.totalAmount,
       },
+    })
+  } catch (error: any) {
+    res.status(500).json({ message: "Server error", error: error.message })
+  }
+}
+
+export const getCheckoutSession = async (req: Request, res: Response) => {
+  try {
+    const { sessionId } = req.params
+
+    const session = await CheckoutSession.findById(sessionId).populate(
+      "items.product",
+      "productName category productImage",
+    )
+
+    if (!session) {
+      return res.status(404).json({ message: "Checkout session not found" })
+    }
+
+    res.json({ session })
+  } catch (error: any) {
+    res.status(500).json({ message: "Server error", error: error.message })
+  }
+}
+
+export const getCustomerSessions = async (req: Request, res: Response) => {
+  try {
+    const { customerId } = req.params
+    const page = Number.parseInt(req.query.page as string) || 1
+    const limit = Number.parseInt(req.query.limit as string) || 10
+
+    const sessions = await CheckoutSession.find({ customerId })
+      .populate("items.product", "productName category productImage")
+      .sort({ createdAt: -1 })
+      .limit(limit * 1)
+      .skip((page - 1) * limit)
+
+    const total = await CheckoutSession.countDocuments({ customerId })
+
+    res.json({
+      sessions,
+      totalPages: Math.ceil(total / limit),
+      currentPage: page,
+      total,
     })
   } catch (error: any) {
     res.status(500).json({ message: "Server error", error: error.message })

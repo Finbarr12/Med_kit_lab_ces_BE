@@ -64,6 +64,7 @@ const OrderSchema: Schema = new Schema(
     customerId: {
       type: Schema.Types.ObjectId,
       ref: "Customer",
+      required: true,
     },
     customerInfo: {
       type: CustomerInfoSchema,
@@ -89,25 +90,17 @@ const OrderSchema: Schema = new Schema(
     },
     status: {
       type: String,
-      enum: [
-        "pending_payment",
-        "payment_submitted",
-        "payment_confirmed",
-        "awaiting_delivery_details",
-        "processing",
-        "shipped",
-        "delivered",
-        "cancelled",
-      ],
-      default: "pending_payment",
+      enum: ["processing", "shipped", "delivered", "cancelled"],
+      default: "processing",
     },
     paymentStatus: {
       type: String,
-      enum: ["pending", "submitted", "confirmed", "failed"],
-      default: "pending",
+      enum: ["confirmed"],
+      default: "confirmed",
     },
     deliveryDetails: {
       type: DeliveryDetailsSchema,
+      required: true,
     },
     notes: {
       type: String,

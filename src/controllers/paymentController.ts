@@ -1,55 +1,35 @@
 import type { Request, Response } from "express"
-import Payment from "../models/Payment"
-import Order from "../models/Order"
+import CheckoutSession from "../models/CheckoutSession"
 
 export const uploadPaymentProof = async (req: Request, res: Response) => {
   try {
-    const { orderId } = req.params
-    const { paymentMethod = "bank_transfer", transactionReference } = req.body
+    const { sessionId } = req.params
     const paymentProof = req.file?.path // Cloudinary secure_url
 
     if (!paymentProof) {
       return res.status(400).json({ message: "Payment proof is required" })
     }
 
-    // Check if order exists
-    const order = await Order.findById(orderId)
-    if (!order) {
-      return res.status(404).json({ message: "Order not found" })
+    // Find checkout session
+    const session = await CheckoutSession.findById(sessionId)
+    if (!session) {
+      return res.status(404).json({ message: "Checkout session not found" })
     }
 
-    if (order.status !== "pending_payment") {
-      return res.status(400).json({ message: "Order is not awaiting payment" })
+    if (session.paymentStatus !== "pending" && session.paymentStatus !== "rejected") {
+      return res.status(400).json({ message: "Payment proof already submitted or approved" })
     }
 
-    // Check if payment request already exists
-    const existingPayment = await Payment.findOne({ orderId })
-    if (existingPayment) {
-      return res.status(400).json({ message: "Payment proof already submitted for this order" })
-    }
+    // Update session with payment proof
+    session.paymentProof = paymentProof
+    session.paymentStatus = "submitted"
+    await session.save()
 
-    const payment = new Payment({
-      orderId,
-      orderNumber: order.orderNumber,
-      amount: order.totalAmount,
-      paymentProof,
-      paymentMethod,
-      transactionReference,
-      customerInfo: order.customerInfo,
-    })
+    await session.populate("items.product", "productName category productImage")
 
-    await payment.save()
-
-    // Update order status
-    order.status = "payment_submitted"
-    order.paymentStatus = "submitted"
-    await order.save()
-
-    await payment.populate("orderId", "orderNumber totalAmount")
-
-    res.status(201).json({
+    res.json({
       message: "Payment proof uploaded successfully. Awaiting admin verification.",
-      payment,
+      session,
       nextStep: "await_verification",
     })
   } catch (error: any) {
@@ -65,19 +45,23 @@ export const getAllPaymentRequests = async (req: Request, res: Response) => {
 
     const query: any = {}
     if (status) {
-      query.status = status
+      query.paymentStatus = status
+    } else {
+      // Only show sessions with payment proof submitted
+      query.paymentStatus = { $in: ["submitted", "approved", "rejected"] }
     }
 
-    const payments = await Payment.find(query)
-      .populate("orderId", "orderNumber totalAmount status items")
+    const sessions = await CheckoutSession.find(query)
+      .populate("items.product", "productName category productImage")
+      .populate("customerId", "fullName email phone")
       .sort({ createdAt: -1 })
       .limit(limit * 1)
       .skip((page - 1) * limit)
 
-    const total = await Payment.countDocuments(query)
+    const total = await CheckoutSession.countDocuments(query)
 
     res.json({
-      payments,
+      sessions,
       totalPages: Math.ceil(total / limit),
       currentPage: page,
       total,
@@ -89,19 +73,15 @@ export const getAllPaymentRequests = async (req: Request, res: Response) => {
 
 export const getPaymentById = async (req: Request, res: Response) => {
   try {
-    const payment = await Payment.findById(req.params.id).populate({
-      path: "orderId",
-      populate: {
-        path: "items.product",
-        select: "productName category productImage",
-      },
-    })
+    const session = await CheckoutSession.findById(req.params.id)
+      .populate("items.product", "productName category productImage")
+      .populate("customerId", "fullName email phone address")
 
-    if (!payment) {
-      return res.status(404).json({ message: "Payment not found" })
+    if (!session) {
+      return res.status(404).json({ message: "Payment request not found" })
     }
 
-    res.json({ payment })
+    res.json({ session })
   } catch (error: any) {
     res.status(500).json({ message: "Server error", error: error.message })
   }
@@ -111,29 +91,22 @@ export const approvePayment = async (req: Request, res: Response) => {
   try {
     const { adminNotes } = req.body
 
-    const payment = await Payment.findByIdAndUpdate(
+    const session = await CheckoutSession.findByIdAndUpdate(
       req.params.id,
       {
-        status: "approved",
-        approvedAt: new Date(),
+        paymentStatus: "approved",
         adminNotes,
       },
       { new: true },
-    ).populate("orderId", "orderNumber")
+    ).populate("items.product", "productName category productImage")
 
-    if (!payment) {
-      return res.status(404).json({ message: "Payment not found" })
+    if (!session) {
+      return res.status(404).json({ message: "Payment request not found" })
     }
-
-    // Update order status
-    const order = await Order.findByIdAndUpdate(payment.orderId, {
-      status: "awaiting_delivery_details",
-      paymentStatus: "confirmed",
-    })
 
     res.json({
       message: "Payment approved successfully. Customer can now add delivery details.",
-      payment,
+      session,
     })
   } catch (error: any) {
     res.status(500).json({ message: "Server error", error: error.message })
@@ -148,47 +121,24 @@ export const rejectPayment = async (req: Request, res: Response) => {
       return res.status(400).json({ message: "Rejection reason is required" })
     }
 
-    const payment = await Payment.findByIdAndUpdate(
+    const session = await CheckoutSession.findByIdAndUpdate(
       req.params.id,
       {
-        status: "rejected",
+        paymentStatus: "rejected",
         rejectionReason,
         adminNotes,
-        approvedAt: new Date(),
       },
       { new: true },
-    ).populate("orderId", "orderNumber")
+    ).populate("items.product", "productName category productImage")
 
-    if (!payment) {
-      return res.status(404).json({ message: "Payment not found" })
+    if (!session) {
+      return res.status(404).json({ message: "Payment request not found" })
     }
-
-    // Update order status back to pending payment
-    await Order.findByIdAndUpdate(payment.orderId, {
-      status: "pending_payment",
-      paymentStatus: "failed",
-    })
 
     res.json({
-      message: "Payment rejected. Customer needs to resubmit payment proof.",
-      payment,
+      message: "Payment rejected. Customer can resubmit payment proof.",
+      session,
     })
-  } catch (error: any) {
-    res.status(500).json({ message: "Server error", error: error.message })
-  }
-}
-
-export const getPaymentByOrderId = async (req: Request, res: Response) => {
-  try {
-    const { orderId } = req.params
-
-    const payment = await Payment.findOne({ orderId }).populate("orderId", "orderNumber totalAmount status")
-
-    if (!payment) {
-      return res.status(404).json({ message: "Payment not found for this order" })
-    }
-
-    res.json({ payment })
   } catch (error: any) {
     res.status(500).json({ message: "Server error", error: error.message })
   }

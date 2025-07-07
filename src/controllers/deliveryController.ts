@@ -1,24 +1,27 @@
 import type { Request, Response } from "express"
+import CheckoutSession from "../models/CheckoutSession"
 import Order from "../models/Order"
+import Product from "../models/Product"
+import Customer from "../models/Customer"
 
 export const addDeliveryDetails = async (req: Request, res: Response) => {
   try {
-    const { orderId } = req.params
+    const { sessionId } = req.params
     const { fullName, phone, address, city, state, zipCode, landmark, deliveryInstructions } = req.body
 
-    const order = await Order.findById(orderId)
-    if (!order) {
-      return res.status(404).json({ message: "Order not found" })
+    const session = await CheckoutSession.findById(sessionId)
+    if (!session) {
+      return res.status(404).json({ message: "Checkout session not found" })
     }
 
-    if (order.status !== "awaiting_delivery_details") {
+    if (session.paymentStatus !== "approved") {
       return res.status(400).json({
-        message: "Order is not ready for delivery details. Payment must be confirmed first.",
+        message: "Payment must be approved before adding delivery details",
       })
     }
 
-    // Update delivery details
-    order.deliveryDetails = {
+    // Add delivery details to session
+    session.deliveryDetails = {
       fullName,
       phone,
       address,
@@ -29,14 +32,50 @@ export const addDeliveryDetails = async (req: Request, res: Response) => {
       deliveryInstructions,
     }
 
-    order.status = "processing"
-    await order.save()
+    await session.save()
 
+    // NOW CREATE THE ACTUAL ORDER
+    const customer = await Customer.findById(session.customerId)
+    if (!customer) {
+      return res.status(404).json({ message: "Customer not found" })
+    }
+
+    // Create order from approved session
+    const order = new Order({
+      customerId: session.customerId,
+      customerInfo: {
+        fullName: customer.fullName,
+        email: customer.email,
+        phone: customer.phone,
+        address: customer.address.street,
+        city: customer.address.city,
+        state: customer.address.state,
+        zipCode: customer.address.zipCode,
+      },
+      items: session.items,
+      totalAmount: session.totalAmount,
+      shippingFee: session.shippingFee,
+      status: "processing",
+      paymentStatus: "confirmed",
+      deliveryDetails: session.deliveryDetails,
+      notes: session.notes,
+    })
+
+    await order.save()
     await order.populate("items.product", "productName category productImage")
 
+    // Update stock for all items (now that order is confirmed)
+    for (const item of session.items) {
+      await Product.updateOne(
+        { _id: item.product, "brands.name": item.brandName },
+        { $inc: { "brands.$.stock": -item.quantity } },
+      )
+    }
+
     res.json({
-      message: "Delivery details added successfully. Your order is now being processed.",
+      message: "Order created successfully! Your order is now being processed.",
       order,
+      sessionNumber: session.sessionNumber,
     })
   } catch (error: any) {
     res.status(500).json({ message: "Server error", error: error.message })
@@ -45,40 +84,39 @@ export const addDeliveryDetails = async (req: Request, res: Response) => {
 
 export const updateDeliveryDetails = async (req: Request, res: Response) => {
   try {
-    const { orderId } = req.params
+    const { sessionId } = req.params
     const { fullName, phone, address, city, state, zipCode, landmark, deliveryInstructions } = req.body
 
-    const order = await Order.findById(orderId)
-    if (!order) {
-      return res.status(404).json({ message: "Order not found" })
+    const session = await CheckoutSession.findById(sessionId)
+    if (!session) {
+      return res.status(404).json({ message: "Checkout session not found" })
     }
 
-    if (!order.deliveryDetails) {
-      return res.status(400).json({ message: "No delivery details found for this order" })
+    if (session.paymentStatus !== "approved") {
+      return res.status(400).json({ message: "Payment must be approved first" })
     }
 
-    if (order.status === "shipped" || order.status === "delivered") {
-      return res.status(400).json({ message: "Cannot update delivery details for shipped/delivered orders" })
+    if (!session.deliveryDetails) {
+      return res.status(400).json({ message: "No delivery details found" })
     }
 
     // Update delivery details
-    order.deliveryDetails = {
-      fullName: fullName || order.deliveryDetails.fullName,
-      phone: phone || order.deliveryDetails.phone,
-      address: address || order.deliveryDetails.address,
-      city: city || order.deliveryDetails.city,
-      state: state || order.deliveryDetails.state,
-      zipCode: zipCode || order.deliveryDetails.zipCode,
-      landmark: landmark || order.deliveryDetails.landmark,
-      deliveryInstructions: deliveryInstructions || order.deliveryDetails.deliveryInstructions,
+    session.deliveryDetails = {
+      fullName: fullName || session.deliveryDetails.fullName,
+      phone: phone || session.deliveryDetails.phone,
+      address: address || session.deliveryDetails.address,
+      city: city || session.deliveryDetails.city,
+      state: state || session.deliveryDetails.state,
+      zipCode: zipCode || session.deliveryDetails.zipCode,
+      landmark: landmark || session.deliveryDetails.landmark,
+      deliveryInstructions: deliveryInstructions || session.deliveryDetails.deliveryInstructions,
     }
 
-    await order.save()
-    await order.populate("items.product", "productName category productImage")
+    await session.save()
 
     res.json({
       message: "Delivery details updated successfully",
-      order,
+      session,
     })
   } catch (error: any) {
     res.status(500).json({ message: "Server error", error: error.message })

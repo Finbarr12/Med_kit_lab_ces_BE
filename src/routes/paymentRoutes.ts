@@ -6,14 +6,12 @@ import {
   getPaymentById,
   approvePayment,
   rejectPayment,
-  getPaymentByOrderId,
 } from "../controllers/paymentController"
 
 const router = Router()
 
-router.post("/upload/:orderId", uploadPaymentProof.single("paymentProof"), uploadProof)
+router.post("/upload/:sessionId", uploadPaymentProof.single("paymentProof"), uploadProof)
 router.get("/", getAllPaymentRequests)
-router.get("/order/:orderId", getPaymentByOrderId)
 router.get("/:id", getPaymentById)
 router.put("/:id/approve", approvePayment)
 router.put("/:id/reject", rejectPayment)

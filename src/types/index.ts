@@ -53,14 +53,11 @@ export interface ICart extends Document {
   updatedAt: Date
 }
 
-export interface ICustomerInfo {
-  fullName: string
-  email: string
-  phone: string
-  address: string
-  city: string
-  state: string
-  zipCode: string
+export interface ICheckoutItem {
+  product: string
+  brandName: string
+  quantity: number
+  price: number
 }
 
 export interface IDeliveryDetails {
@@ -72,6 +69,32 @@ export interface IDeliveryDetails {
   zipCode: string
   landmark?: string
   deliveryInstructions?: string
+}
+
+export interface ICheckoutSession extends Document {
+  sessionNumber: string
+  customerId: string
+  items: ICheckoutItem[]
+  totalAmount: number
+  shippingFee: number
+  paymentProof?: string
+  paymentStatus: "pending" | "submitted" | "approved" | "rejected"
+  deliveryDetails?: IDeliveryDetails
+  rejectionReason?: string
+  adminNotes?: string
+  notes?: string
+  createdAt: Date
+  updatedAt: Date
+}
+
+export interface ICustomerInfo {
+  fullName: string
+  email: string
+  phone: string
+  address: string
+  city: string
+  state: string
+  zipCode: string
 }
 
 export interface IOrderItem {
@@ -88,35 +111,11 @@ export interface IOrder extends Document {
   items: IOrderItem[]
   totalAmount: number
   shippingFee: number
-  status:
-    | "pending_payment"
-    | "payment_submitted"
-    | "payment_confirmed"
-    | "awaiting_delivery_details"
-    | "processing"
-    | "shipped"
-    | "delivered"
-    | "cancelled"
-  paymentStatus: "pending" | "submitted" | "confirmed" | "failed"
-  deliveryDetails?: IDeliveryDetails
+  status: "processing" | "shipped" | "delivered" | "cancelled"
+  paymentStatus: "confirmed"
+  deliveryDetails: IDeliveryDetails
   notes?: string
   trackingNumber?: string
-  createdAt: Date
-  updatedAt: Date
-}
-
-export interface IPayment extends Document {
-  orderId: string
-  orderNumber: string
-  amount: number
-  paymentProof: string
-  paymentMethod: "bank_transfer" | "mobile_money" | "cash"
-  transactionReference?: string
-  status: "pending" | "approved" | "rejected"
-  customerInfo: ICustomerInfo
-  approvedAt?: Date
-  rejectionReason?: string
-  adminNotes?: string
   createdAt: Date
   updatedAt: Date
 }
