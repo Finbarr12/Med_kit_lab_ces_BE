@@ -9,7 +9,7 @@ import {
 const router = Router();
 
 router.get("/summary/:customerId", getCheckoutSummary);
-router.post("/:customerId", createCheckoutSession);
+router.post("/:customerId/:sessionId", createCheckoutSession);
 router.get("/session/:sessionId", getCheckoutSession);
 router.get("/customer/:customerId/sessions", getCustomerSessions);
 

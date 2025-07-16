@@ -7,25 +7,25 @@ import CheckoutSession from "../models/checkoutSession";
 
 export const createCheckoutSession = async (req: Request, res: Response) => {
   try {
-    const { customerId } = req.params;
-    const { shippingFee = 0, notes } = req.body;
+    const { sessionId, customerId } = req.params;
 
-    // Get customer cart
-    const cart: any = await Cart.findOne({ customerId }).populate(
+    if (!customerId) {
+      return res
+        .status(401)
+        .json({ message: "User must be logged in to checkout" });
+    }
+
+    // Get the cart by sessionId
+    const cart = await Cart.findOne({ sessionId }).populate(
       "items.product",
       "productName category"
     );
+
     if (!cart || cart.items.length === 0) {
       return res.status(400).json({ message: "Cart is empty" });
     }
 
-    // Get customer info
-    const customer = await Customer.findById(customerId);
-    if (!customer) {
-      return res.status(404).json({ message: "Customer not found" });
-    }
-
-    // Validate stock availability for all items
+    // Validate stock
     for (const cartItem of cart.items) {
       const product = await Product.findById(cartItem.product);
       if (!product) {
@@ -48,7 +48,6 @@ export const createCheckoutSession = async (req: Request, res: Response) => {
       }
     }
 
-    // Create checkout session from cart
     const sessionItems = cart.items.map((item: any) => ({
       product: item.product._id,
       brandName: item.brandName,
@@ -56,14 +55,14 @@ export const createCheckoutSession = async (req: Request, res: Response) => {
       price: item.price,
     }));
 
-    const totalAmount = cart.totalAmount + shippingFee;
+    const totalAmount = cart.totalAmount + (req.body.shippingFee || 0);
 
     const checkoutSession = new CheckoutSession({
       customerId,
       items: sessionItems,
       totalAmount,
-      shippingFee,
-      notes,
+      shippingFee: req.body.shippingFee || 0,
+      notes: req.body.notes,
     });
 
     await checkoutSession.save();
@@ -72,23 +71,25 @@ export const createCheckoutSession = async (req: Request, res: Response) => {
       "productName category productImage"
     );
 
-    // Clear the cart
+    // Clear cart after checkout
     cart.items = [];
     cart.totalAmount = 0;
     await cart.save();
 
-    // Get store bank details for payment
+    // Get store settings for bank info
     const settings = await Settings.findOne();
     const bankInfo = settings?.bankInfo || null;
 
-    res.status(201).json({
+    return res.status(201).json({
       message: "Checkout session created. Please upload payment proof.",
       session: checkoutSession,
       bankInfo,
       nextStep: "upload_payment_proof",
     });
   } catch (error: any) {
-    res.status(500).json({ message: "Server error", error: error.message });
+    return res
+      .status(500)
+      .json({ message: "Server error", error: error.message });
   }
 };
 
