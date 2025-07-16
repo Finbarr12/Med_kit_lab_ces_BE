@@ -3,7 +3,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getAllCustomers = exports.updateCustomer = exports.getCustomerByEmail = exports.getCustomerById = exports.createCustomer = void 0;
+exports.getAllCustomers = exports.updateCustomer = exports.getCustomerByEmail = exports.getCustomerById = exports.login_customer = exports.createCustomer = void 0;
 const express_validator_1 = require("express-validator");
 const Customer_1 = __importDefault(require("../models/Customer"));
 const createCustomer = async (req, res) => {
@@ -16,7 +16,9 @@ const createCustomer = async (req, res) => {
         // Check if customer already exists
         const existingCustomer = await Customer_1.default.findOne({ email });
         if (existingCustomer) {
-            return res.status(400).json({ message: "Customer already exists with this email" });
+            return res
+                .status(400)
+                .json({ message: "Customer already exists with this email" });
         }
         const customer = new Customer_1.default({
             email,
@@ -36,6 +38,23 @@ const createCustomer = async (req, res) => {
     }
 };
 exports.createCustomer = createCustomer;
+const login_customer = async (req, res) => {
+    try {
+        const { email, password } = req.body;
+        const user = await Customer_1.default.find({ email, password });
+        if (!user) {
+            return res.status(200).send("User not found");
+        }
+        return res.status(200).json({
+            message: "Authenticated success",
+            data: user,
+        });
+    }
+    catch (error) {
+        res.status(500).json({ message: "Server error", error: error.message });
+    }
+};
+exports.login_customer = login_customer;
 const getCustomerById = async (req, res) => {
     try {
         const customer = await Customer_1.default.findById(req.params.id);

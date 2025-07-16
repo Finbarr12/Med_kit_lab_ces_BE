@@ -1,5 +1,5 @@
-import mongoose, { Schema } from "mongoose"
-import type { ICustomer } from "../types"
+import mongoose, { Schema } from "mongoose";
+import type { ICustomer } from "../types";
 
 const AddressSchema: Schema = new Schema(
   {
@@ -9,8 +9,8 @@ const AddressSchema: Schema = new Schema(
     zipCode: { type: String, required: true, trim: true },
     country: { type: String, required: true, default: "Nigeria", trim: true },
   },
-  { _id: false },
-)
+  { _id: false }
+);
 
 const CustomerSchema: Schema = new Schema(
   {
@@ -22,6 +22,11 @@ const CustomerSchema: Schema = new Schema(
       trim: true,
     },
     fullName: {
+      type: String,
+      required: true,
+      trim: true,
+    },
+    password: {
       type: String,
       required: true,
       trim: true,
@@ -38,7 +43,7 @@ const CustomerSchema: Schema = new Schema(
   },
   {
     timestamps: true,
-  },
-)
+  }
+);
 
-export default mongoose.model<ICustomer>("Customer", CustomerSchema)
+export default mongoose.model<ICustomer>("Customer", CustomerSchema);

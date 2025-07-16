@@ -9,6 +9,7 @@ export interface IUser extends Document {
 export interface ICustomer extends Document {
   email: string;
   fullName: string;
+  password: string;
   phone: string;
   address: {
     street: string;
