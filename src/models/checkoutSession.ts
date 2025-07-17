@@ -76,7 +76,7 @@ const CheckoutSessionSchema: Schema = new Schema(
   {
     sessionNumber: {
       type: String,
-      required: true,
+      // required: true,
       unique: true,
     },
     customerId: {

@@ -69,7 +69,7 @@ const DeliveryDetailsSchema = new mongoose_1.Schema({
 const CheckoutSessionSchema = new mongoose_1.Schema({
     sessionNumber: {
         type: String,
-        required: true,
+        // required: true,
         unique: true,
     },
     customerId: {
