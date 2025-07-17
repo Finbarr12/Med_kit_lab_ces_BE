@@ -8,7 +8,7 @@ import {
 
 const router = Router();
 
-router.get("/summary/:customerId", getCheckoutSummary);
+router.get("/summary/:customerId/:customerId", getCheckoutSummary);
 router.post("/:customerId/:sessionId", createCheckoutSession);
 router.get("/session/:sessionId", getCheckoutSession);
 router.get("/customer/:customerId/sessions", getCustomerSessions);

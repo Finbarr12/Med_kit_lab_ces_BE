@@ -81,20 +81,30 @@ const createCheckoutSession = async (req, res) => {
 exports.createCheckoutSession = createCheckoutSession;
 const getCheckoutSummary = async (req, res) => {
     try {
-        const { customerId } = req.params;
-        // Get customer cart
-        const cart = await Cart_1.default.findOne({ customerId }).populate("items.product", "productName category productImage");
+        const { sessionId, customerId } = req.params;
+        if (!customerId) {
+            return res
+                .status(401)
+                .json({ message: "User must be logged in to view checkout summary" });
+        }
+        // Get the cart using sessionId
+        const cart = await Cart_1.default.findOne({ sessionId }).populate("items.product", "productName category productImage");
         if (!cart || cart.items.length === 0) {
             return res.status(400).json({ message: "Cart is empty" });
         }
-        // Get customer info
+        // Attach customerId to cart if not yet assigned
+        if (!cart.customerId) {
+            cart.customerId = customerId;
+            await cart.save();
+        }
+        // Get customer details
         const customer = await Customer_1.default.findById(customerId);
         if (!customer) {
             return res.status(404).json({ message: "Customer not found" });
         }
         // Get store settings
         const settings = await Settings_1.default.findOne();
-        res.json({
+        return res.json({
             cart,
             customer,
             storeInfo: settings?.storeInfo || null,
@@ -107,7 +117,9 @@ const getCheckoutSummary = async (req, res) => {
         });
     }
     catch (error) {
-        res.status(500).json({ message: "Server error", error: error.message });
+        return res
+            .status(500)
+            .json({ message: "Server error", error: error.message });
     }
 };
 exports.getCheckoutSummary = getCheckoutSummary;
