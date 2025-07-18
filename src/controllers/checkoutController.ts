@@ -72,9 +72,9 @@ export const createCheckoutSession = async (req: Request, res: Response) => {
     );
 
     // Clear cart after checkout
-    cart.items = [];
-    cart.totalAmount = 0;
-    await cart.save();
+    // cart.items = [];
+    // cart.totalAmount = 0;
+    // await cart.save();
 
     // Get store settings for bank info
     const settings = await Settings.findOne();
@@ -103,21 +103,13 @@ export const getCheckoutSummary = async (req: Request, res: Response) => {
         .json({ message: "User must be logged in to view checkout summary" });
     }
 
-    // Get the cart using sessionId
-    const cart = await Cart.findOne({ sessionId }).populate(
+    // Try to get the cart
+    const cart: any = await Cart.findOne({ sessionId }).populate(
       "items.product",
       "productName category productImage"
     );
 
-    if (!cart || cart.items.length === 0) {
-      return res.status(400).json({ message: "Cart is empty" });
-    }
-
-    // Attach customerId to cart if not yet assigned
-    if (!cart.customerId) {
-      cart.customerId = customerId;
-      await cart.save();
-    }
+    let isCartEmpty = !cart || cart.items.length === 0;
 
     // Get customer details
     const customer = await Customer.findById(customerId);
@@ -128,15 +120,48 @@ export const getCheckoutSummary = async (req: Request, res: Response) => {
     // Get store settings
     const settings = await Settings.findOne();
 
+    // If cart has items, return summary from cart
+    if (!isCartEmpty) {
+      // Attach customerId to cart if not already
+      if (!cart.customerId) {
+        cart.customerId = customerId;
+        await cart.save();
+      }
+
+      return res.json({
+        cart,
+        customer,
+        storeInfo: settings?.storeInfo || null,
+        bankInfo: settings?.bankInfo || null,
+        summary: {
+          subtotal: cart.totalAmount,
+          shippingFee: 0,
+          total: cart.totalAmount,
+        },
+      });
+    }
+
+    // If cart is empty, get latest checkout session instead
+    const latestSession = await CheckoutSession.findOne({ customerId })
+      .sort({ createdAt: -1 })
+      .populate("items.product", "productName category productImage");
+
+    if (!latestSession) {
+      return res
+        .status(400)
+        .json({ message: "Cart is empty and no previous checkout found." });
+    }
+
     return res.json({
-      cart,
+      cart: null,
+      checkoutSession: latestSession,
       customer,
       storeInfo: settings?.storeInfo || null,
       bankInfo: settings?.bankInfo || null,
       summary: {
-        subtotal: cart.totalAmount,
-        shippingFee: 0,
-        total: cart.totalAmount,
+        subtotal: latestSession.totalAmount - latestSession.shippingFee,
+        shippingFee: latestSession.shippingFee,
+        total: latestSession.totalAmount,
       },
     });
   } catch (error: any) {

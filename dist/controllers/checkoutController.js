@@ -59,9 +59,9 @@ const createCheckoutSession = async (req, res) => {
         await checkoutSession.save();
         await checkoutSession.populate("items.product", "productName category productImage");
         // Clear cart after checkout
-        cart.items = [];
-        cart.totalAmount = 0;
-        await cart.save();
+        // cart.items = [];
+        // cart.totalAmount = 0;
+        // await cart.save();
         // Get store settings for bank info
         const settings = await Settings_1.default.findOne();
         const bankInfo = settings?.bankInfo || null;
@@ -87,16 +87,9 @@ const getCheckoutSummary = async (req, res) => {
                 .status(401)
                 .json({ message: "User must be logged in to view checkout summary" });
         }
-        // Get the cart using sessionId
+        // Try to get the cart
         const cart = await Cart_1.default.findOne({ sessionId }).populate("items.product", "productName category productImage");
-        if (!cart || cart.items.length === 0) {
-            return res.status(400).json({ message: "Cart is empty" });
-        }
-        // Attach customerId to cart if not yet assigned
-        if (!cart.customerId) {
-            cart.customerId = customerId;
-            await cart.save();
-        }
+        let isCartEmpty = !cart || cart.items.length === 0;
         // Get customer details
         const customer = await Customer_1.default.findById(customerId);
         if (!customer) {
@@ -104,15 +97,44 @@ const getCheckoutSummary = async (req, res) => {
         }
         // Get store settings
         const settings = await Settings_1.default.findOne();
+        // If cart has items, return summary from cart
+        if (!isCartEmpty) {
+            // Attach customerId to cart if not already
+            if (!cart.customerId) {
+                cart.customerId = customerId;
+                await cart.save();
+            }
+            return res.json({
+                cart,
+                customer,
+                storeInfo: settings?.storeInfo || null,
+                bankInfo: settings?.bankInfo || null,
+                summary: {
+                    subtotal: cart.totalAmount,
+                    shippingFee: 0,
+                    total: cart.totalAmount,
+                },
+            });
+        }
+        // If cart is empty, get latest checkout session instead
+        const latestSession = await checkoutSession_1.default.findOne({ customerId })
+            .sort({ createdAt: -1 })
+            .populate("items.product", "productName category productImage");
+        if (!latestSession) {
+            return res
+                .status(400)
+                .json({ message: "Cart is empty and no previous checkout found." });
+        }
         return res.json({
-            cart,
+            cart: null,
+            checkoutSession: latestSession,
             customer,
             storeInfo: settings?.storeInfo || null,
             bankInfo: settings?.bankInfo || null,
             summary: {
-                subtotal: cart.totalAmount,
-                shippingFee: 0,
-                total: cart.totalAmount,
+                subtotal: latestSession.totalAmount - latestSession.shippingFee,
+                shippingFee: latestSession.shippingFee,
+                total: latestSession.totalAmount,
             },
         });
     }
