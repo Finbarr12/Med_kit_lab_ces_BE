@@ -1,35 +1,40 @@
 import type { Request, Response } from "express";
 import CheckoutSession from "../models/checkoutSession";
+import Customer from "../models/Customer";
 
 export const uploadPaymentProof = async (req: Request, res: Response) => {
   try {
-    const { sessionId } = req.params;
-    const paymentProof = req.file?.path; // Cloudinary secure_url
+    const { customerId } = req.params;
+    const paymentProof = req.file?.path; // Cloudinary URL
 
     if (!paymentProof) {
       return res.status(400).json({ message: "Payment proof is required" });
     }
 
-    // Find checkout session
-    const session = await CheckoutSession.findById(sessionId);
+    // Check if customer exists
+    const customer = await Customer.findById(customerId);
+    if (!customer) {
+      return res.status(404).json({ message: "Customer not found" });
+    }
+
+    // Get customer's active checkout session
+    const session = await CheckoutSession.findOne({
+      customerId,
+      paymentStatus: { $in: ["pending", "rejected"] }, // only if payment is still allowed
+    }).sort({ createdAt: -1 });
+
     if (!session) {
-      return res.status(404).json({ message: "Checkout session not found" });
-    }
-
-    if (
-      session.paymentStatus !== "pending" &&
-      session.paymentStatus !== "rejected"
-    ) {
       return res
-        .status(400)
-        .json({ message: "Payment proof already submitted or approved" });
+        .status(404)
+        .json({ message: "No active checkout session found" });
     }
 
-    // Update session with payment proof
+    // Attach payment proof
     session.paymentProof = paymentProof;
     session.paymentStatus = "submitted";
     await session.save();
 
+    // Populate product details
     await session.populate(
       "items.product",
       "productName category productImage"

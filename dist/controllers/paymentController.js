@@ -5,28 +5,34 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.rejectPayment = exports.approvePayment = exports.getPaymentById = exports.getAllPaymentRequests = exports.uploadPaymentProof = void 0;
 const checkoutSession_1 = __importDefault(require("../models/checkoutSession"));
+const Customer_1 = __importDefault(require("../models/Customer"));
 const uploadPaymentProof = async (req, res) => {
     try {
-        const { sessionId } = req.params;
-        const paymentProof = req.file?.path; // Cloudinary secure_url
+        const { customerId } = req.params;
+        const paymentProof = req.file?.path; // Cloudinary URL
         if (!paymentProof) {
             return res.status(400).json({ message: "Payment proof is required" });
         }
-        // Find checkout session
-        const session = await checkoutSession_1.default.findById(sessionId);
+        // Check if customer exists
+        const customer = await Customer_1.default.findById(customerId);
+        if (!customer) {
+            return res.status(404).json({ message: "Customer not found" });
+        }
+        // Get customer's active checkout session
+        const session = await checkoutSession_1.default.findOne({
+            customerId,
+            paymentStatus: { $in: ["pending", "rejected"] }, // only if payment is still allowed
+        }).sort({ createdAt: -1 });
         if (!session) {
-            return res.status(404).json({ message: "Checkout session not found" });
-        }
-        if (session.paymentStatus !== "pending" &&
-            session.paymentStatus !== "rejected") {
             return res
-                .status(400)
-                .json({ message: "Payment proof already submitted or approved" });
+                .status(404)
+                .json({ message: "No active checkout session found" });
         }
-        // Update session with payment proof
+        // Attach payment proof
         session.paymentProof = paymentProof;
         session.paymentStatus = "submitted";
         await session.save();
+        // Populate product details
         await session.populate("items.product", "productName category productImage");
         res.json({
             message: "Payment proof uploaded successfully. Awaiting admin verification.",

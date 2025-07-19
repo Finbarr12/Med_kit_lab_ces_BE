@@ -11,7 +11,7 @@ import {
 const router = Router();
 
 router.post(
-  "/upload/:sessionId",
+  "/upload/:customerId",
   uploadPaymentProof.single("paymentProof"),
   uploadProof
 );
