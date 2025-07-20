@@ -58,7 +58,7 @@ const OrderSchema: Schema = new Schema(
   {
     orderNumber: {
       type: String,
-      required: true,
+      // required: true,
       unique: true,
     },
     customerId: {
