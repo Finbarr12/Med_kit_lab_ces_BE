@@ -10,18 +10,19 @@ const Product_1 = __importDefault(require("../models/Product"));
 const Customer_1 = __importDefault(require("../models/Customer"));
 const addDeliveryDetails = async (req, res) => {
     try {
-        const { sessionId } = req.params;
+        const { customerId } = req.params;
         const { fullName, phone, address, city, state, zipCode, landmark, deliveryInstructions, } = req.body;
-        const session = await checkoutSession_1.default.findById(sessionId);
+        // Find latest approved session for customer
+        const session = await checkoutSession_1.default.findOne({
+            customerId,
+            paymentStatus: "approved",
+        }).sort({ createdAt: -1 });
         if (!session) {
-            return res.status(404).json({ message: "Checkout session not found" });
+            return res
+                .status(404)
+                .json({ message: "No approved checkout session found" });
         }
-        if (session.paymentStatus !== "approved") {
-            return res.status(400).json({
-                message: "Payment must be approved before adding delivery details",
-            });
-        }
-        // Add delivery details to session
+        // Add delivery details
         session.deliveryDetails = {
             fullName,
             phone,
@@ -33,14 +34,14 @@ const addDeliveryDetails = async (req, res) => {
             deliveryInstructions,
         };
         await session.save();
-        // NOW CREATE THE ACTUAL ORDER
-        const customer = await Customer_1.default.findById(session.customerId);
+        // Retrieve customer
+        const customer = await Customer_1.default.findById(customerId);
         if (!customer) {
             return res.status(404).json({ message: "Customer not found" });
         }
-        // Create order from approved session
+        // Create order
         const order = new Order_1.default({
-            customerId: session.customerId,
+            customerId,
             customerInfo: {
                 fullName: customer.fullName,
                 email: customer.email,
@@ -60,7 +61,7 @@ const addDeliveryDetails = async (req, res) => {
         });
         await order.save();
         await order.populate("items.product", "productName category productImage");
-        // Update stock for all items (now that order is confirmed)
+        // Update stock
         for (const item of session.items) {
             await Product_1.default.updateOne({ _id: item.product, "brands.name": item.brandName }, { $inc: { "brands.$.stock": -item.quantity } });
         }
@@ -77,21 +78,22 @@ const addDeliveryDetails = async (req, res) => {
 exports.addDeliveryDetails = addDeliveryDetails;
 const updateDeliveryDetails = async (req, res) => {
     try {
-        const { sessionId } = req.params;
+        const { customerId } = req.params;
         const { fullName, phone, address, city, state, zipCode, landmark, deliveryInstructions, } = req.body;
-        const session = await checkoutSession_1.default.findById(sessionId);
+        // Find the latest approved session for the customer
+        const session = await checkoutSession_1.default.findOne({
+            customerId,
+            paymentStatus: "approved",
+        }).sort({ createdAt: -1 });
         if (!session) {
-            return res.status(404).json({ message: "Checkout session not found" });
-        }
-        if (session.paymentStatus !== "approved") {
             return res
-                .status(400)
-                .json({ message: "Payment must be approved first" });
+                .status(404)
+                .json({ message: "No approved checkout session found" });
         }
         if (!session.deliveryDetails) {
-            return res.status(400).json({ message: "No delivery details found" });
+            return res.status(400).json({ message: "No delivery details to update" });
         }
-        // Update delivery details
+        // Update fields if provided
         session.deliveryDetails = {
             fullName: fullName || session.deliveryDetails.fullName,
             phone: phone || session.deliveryDetails.phone,

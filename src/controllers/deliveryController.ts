@@ -6,7 +6,7 @@ import Customer from "../models/Customer";
 
 export const addDeliveryDetails = async (req: Request, res: Response) => {
   try {
-    const { sessionId } = req.params;
+    const { customerId } = req.params;
     const {
       fullName,
       phone,
@@ -18,18 +18,19 @@ export const addDeliveryDetails = async (req: Request, res: Response) => {
       deliveryInstructions,
     } = req.body;
 
-    const session = await CheckoutSession.findById(sessionId);
+    // Find latest approved session for customer
+    const session = await CheckoutSession.findOne({
+      customerId,
+      paymentStatus: "approved",
+    }).sort({ createdAt: -1 });
+
     if (!session) {
-      return res.status(404).json({ message: "Checkout session not found" });
+      return res
+        .status(404)
+        .json({ message: "No approved checkout session found" });
     }
 
-    if (session.paymentStatus !== "approved") {
-      return res.status(400).json({
-        message: "Payment must be approved before adding delivery details",
-      });
-    }
-
-    // Add delivery details to session
+    // Add delivery details
     session.deliveryDetails = {
       fullName,
       phone,
@@ -43,15 +44,15 @@ export const addDeliveryDetails = async (req: Request, res: Response) => {
 
     await session.save();
 
-    // NOW CREATE THE ACTUAL ORDER
-    const customer = await Customer.findById(session.customerId);
+    // Retrieve customer
+    const customer = await Customer.findById(customerId);
     if (!customer) {
       return res.status(404).json({ message: "Customer not found" });
     }
 
-    // Create order from approved session
+    // Create order
     const order = new Order({
-      customerId: session.customerId,
+      customerId,
       customerInfo: {
         fullName: customer.fullName,
         email: customer.email,
@@ -73,7 +74,7 @@ export const addDeliveryDetails = async (req: Request, res: Response) => {
     await order.save();
     await order.populate("items.product", "productName category productImage");
 
-    // Update stock for all items (now that order is confirmed)
+    // Update stock
     for (const item of session.items) {
       await Product.updateOne(
         { _id: item.product, "brands.name": item.brandName },
@@ -93,7 +94,7 @@ export const addDeliveryDetails = async (req: Request, res: Response) => {
 
 export const updateDeliveryDetails = async (req: Request, res: Response) => {
   try {
-    const { sessionId } = req.params;
+    const { customerId } = req.params;
     const {
       fullName,
       phone,
@@ -105,22 +106,23 @@ export const updateDeliveryDetails = async (req: Request, res: Response) => {
       deliveryInstructions,
     } = req.body;
 
-    const session = await CheckoutSession.findById(sessionId);
-    if (!session) {
-      return res.status(404).json({ message: "Checkout session not found" });
-    }
+    // Find the latest approved session for the customer
+    const session = await CheckoutSession.findOne({
+      customerId,
+      paymentStatus: "approved",
+    }).sort({ createdAt: -1 });
 
-    if (session.paymentStatus !== "approved") {
+    if (!session) {
       return res
-        .status(400)
-        .json({ message: "Payment must be approved first" });
+        .status(404)
+        .json({ message: "No approved checkout session found" });
     }
 
     if (!session.deliveryDetails) {
-      return res.status(400).json({ message: "No delivery details found" });
+      return res.status(400).json({ message: "No delivery details to update" });
     }
 
-    // Update delivery details
+    // Update fields if provided
     session.deliveryDetails = {
       fullName: fullName || session.deliveryDetails.fullName,
       phone: phone || session.deliveryDetails.phone,

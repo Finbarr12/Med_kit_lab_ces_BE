@@ -6,7 +6,7 @@ import {
 
 const router = Router();
 
-router.post("/:sessionId", addDeliveryDetails);
-router.put("/:sessionId", updateDeliveryDetails);
+router.post("/:customerId", addDeliveryDetails);
+router.patch("/update/:customerId", updateDeliveryDetails);
 
 export default router;
