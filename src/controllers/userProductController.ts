@@ -1,5 +1,7 @@
 import type { Request, Response } from "express"
 import Product from "../models/Product"
+import checkoutSession from "../models/checkoutSession"
+import Reviews from "../models/Reviews"
 
 export const getAllProducts = async (req: Request, res: Response) => {
   try {
@@ -167,3 +169,53 @@ export const searchProducts = async (req: Request, res: Response) => {
     res.status(500).json({ message: "Server error", error: error.message })
   }
 }
+
+
+
+export const leaveReview = async (req:any, res:any) => {
+  try {
+    const {customerId, productId} = req.params
+    const { rating, comment } = req.body;
+
+    const session = await checkoutSession.findOne({
+      customerId,
+      "items.product": productId,
+    });
+
+    if (!session) {
+      return res.status(403).json({ message: "You can only review products you've purchased and received." });
+    }
+
+    const existing = await Reviews.findOne({ customerId, productId });
+    if (existing) {
+      return res.status(400).json({ message: "You have already reviewed this product." });
+    }
+
+    const review = await Reviews.create({
+      customerId,
+      productId,
+      rating,
+      comment
+    });
+
+    res.json({ message: "Review submitted successfully", review });
+  } catch (error:any) {
+    res.status(500).json({ message: "Server error", error: error.message });
+  }
+};
+
+
+
+export const getProductReviews = async (req:any, res:any) => {
+  try {
+    const { productId } = req.params;
+
+    const reviews = await Reviews.find({ productId })
+      .populate("customerId", "firstName lastName") 
+      .sort({ createdAt: -1 });
+
+    res.json({ reviews });
+  } catch (error:any) {
+    res.status(500).json({ message: "Server error", error: error.message });
+  }
+};

@@ -3,8 +3,10 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.searchProducts = exports.getFeaturedProducts = exports.getProductsByCategory = exports.getProductById = exports.getAllProducts = void 0;
+exports.getProductReviews = exports.leaveReview = exports.searchProducts = exports.getFeaturedProducts = exports.getProductsByCategory = exports.getProductById = exports.getAllProducts = void 0;
 const Product_1 = __importDefault(require("../models/Product"));
+const checkoutSession_1 = __importDefault(require("../models/checkoutSession"));
+const Reviews_1 = __importDefault(require("../models/Reviews"));
 const getAllProducts = async (req, res) => {
     try {
         const page = Number.parseInt(req.query.page) || 1;
@@ -156,4 +158,45 @@ const searchProducts = async (req, res) => {
     }
 };
 exports.searchProducts = searchProducts;
+const leaveReview = async (req, res) => {
+    try {
+        const { customerId, productId } = req.params;
+        const { rating, comment } = req.body;
+        const session = await checkoutSession_1.default.findOne({
+            customerId,
+            "items.product": productId,
+        });
+        if (!session) {
+            return res.status(403).json({ message: "You can only review products you've purchased and received." });
+        }
+        const existing = await Reviews_1.default.findOne({ customerId, productId });
+        if (existing) {
+            return res.status(400).json({ message: "You have already reviewed this product." });
+        }
+        const review = await Reviews_1.default.create({
+            customerId,
+            productId,
+            rating,
+            comment
+        });
+        res.json({ message: "Review submitted successfully", review });
+    }
+    catch (error) {
+        res.status(500).json({ message: "Server error", error: error.message });
+    }
+};
+exports.leaveReview = leaveReview;
+const getProductReviews = async (req, res) => {
+    try {
+        const { productId } = req.params;
+        const reviews = await Reviews_1.default.find({ productId })
+            .populate("customerId", "firstName lastName")
+            .sort({ createdAt: -1 });
+        res.json({ reviews });
+    }
+    catch (error) {
+        res.status(500).json({ message: "Server error", error: error.message });
+    }
+};
+exports.getProductReviews = getProductReviews;
 //# sourceMappingURL=userProductController.js.map

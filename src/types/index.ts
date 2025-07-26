@@ -28,6 +28,8 @@ export interface IBrand {
   stock: number;
 }
 
+
+
 export interface IProduct extends Document {
   productName: string;
   category: string;

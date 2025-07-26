@@ -9,5 +9,7 @@ router.get("/featured", userProductController_1.getFeaturedProducts);
 router.get("/search", userProductController_1.searchProducts);
 router.get("/category/:category", userProductController_1.getProductsByCategory);
 router.get("/:id", userProductController_1.getProductById);
+router.post("/review/:customerId/:productId", userProductController_1.leaveReview);
+router.get("/review/:productId", userProductController_1.getProductReviews);
 exports.default = router;
 //# sourceMappingURL=userProductRoutes.js.map
